@@ -6,12 +6,13 @@ import * as THREE from 'three';
 import cookTorranceVertexShader from "./shaders/cook-torrance.v.glsl?raw";
 import cookTorranceFragmentShader from './shaders/cook-torrance.f.glsl?raw';
 
+let camera;
 
 function CanvasBuilder() {
     const canvasRef = useRef(null)
 
 
-    useEffect(() => {
+    useEffect(() => { // basically our init
         const canvas = canvasRef.current;
 
         // Renderer using React-managed canvas
@@ -27,7 +28,7 @@ function CanvasBuilder() {
         scene.background = new THREE.Color(0x050505); // Dark background
 
 
-        const camera = new THREE.PerspectiveCamera(
+        camera = new THREE.PerspectiveCamera(
             70,
             window.innerWidth / window.innerHeight,
             0.1,
@@ -49,24 +50,13 @@ function CanvasBuilder() {
             nPos.push(v3.clone());
         }
         geometry.userData.nPos = nPos;
-        let material = new THREE.RawShaderMaterial( {
-            uniforms : {
-                light_color: {value: new THREE.Vector3(1.0,1.0,1.0)},
-                lightPosition: {value: new THREE.Vector3(12.0,12.0,12.0)},
-                ambient_reflectance: {value: 0.5},
-                ambient_color: {value: new THREE.Vector3(255/255,255/255,255/255)},
-                diffuse_reflectance: {value: 1.0},
-                diffuse_color: {value: new THREE.Vector3(210/255,210/255,210/255)},
-                specular_reflectance: {value: 0.6},
-                specular_color: {value: new THREE.Vector3(255/255,255/255,255/255)},
-                intensity: {value: 1.0},
-                roughness: {value: 0.2}
-            },
-            vertexShader: cookTorranceVertexShader,
-            fragmentShader: cookTorranceFragmentShader,
-            glslVersion: THREE.GLSL3
+
+        let material = new THREE.MeshStandardMaterial({
+            color: '#aaa9ad',
+            roughness: 0.3,
+            metalness: 1.0,
+            envMap: new THREE.PMREMGenerator(renderer).fromScene(scene)
         });
-        material.uniformsNeedUpdate = true;
 
         let sphere = new THREE.Mesh(geometry, material);
         scene.add(sphere);
@@ -77,6 +67,10 @@ function CanvasBuilder() {
         const light = new THREE.DirectionalLight(0xffffff, 1);
         light.position.set(2, 2, 2);
         scene.add(light);
+
+        const light2 = new THREE.DirectionalLight(0xffffff, 1);
+        light2.position.set(-2,2,2);
+        scene.add(light2);
 
         // Animation loop
         const animate = () => {
