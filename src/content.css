@@ -16,26 +16,56 @@ html, body {
   overflow-y: scroll;
 }
 
-
-.content-wrapper {
-    z-index: 0;         /* default stacking level */
-    font-family: "Space Grotesk";
-    color: white;
-    height: 100%;
+.title-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 0;
+  font-family: "Space Grotesk";
+  color: rgba(255,255,255,255);
+  height: 100%;
+  font-size: xx-large;
 }
 
 
+
+
+.content-wrapper {
+  z-index: 0;
+  font-family: "Space Grotesk";
+  color: white;
+  height: 100%;
+}
+
 .snaptarget {
   scroll-snap-align: start;
-  height: 100vh; /* Full screen */
+  height: 100vh;
   width: 100%;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;     
   padding: 2rem;
   box-sizing: border-box;
 }
 
+.content-section {
+  display: flex;
+  flex-direction: column;
+  max-width: 50vw;
+}
+
+.snaptarget:nth-child(even) {
+  justify-content: flex-start;  /* Align to left */
+}
+
+.snaptarget:nth-child(odd) {
+  justify-content: flex-end;    /* Align to right */
+}
+
+.title-section:first-child { 
+  padding: 20vh;
+  justify-content: center; /* This is the title section want it in the center instead of left/right */
+  align-items: baseline;
+}
 
 canvas {
   position: fixed;
