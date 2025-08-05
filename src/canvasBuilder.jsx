@@ -3,7 +3,9 @@ import openSimplexNoise from 'https://cdn.skypack.dev/open-simplex-noise';
 
 import * as THREE from 'three';
 
-let camera, sphere, scene, clock, noise;
+let camera, scene, clock, noise;
+let sphere, box;
+
 
 function liquidMetal(geometry, radius) {
     // Effect that makes the sphere seem liquid / goo-like
@@ -22,17 +24,33 @@ function liquidMetal(geometry, radius) {
     return geometry
 }
 
-function CanvasBuilder({ scrollState }) {
+function changeSceneVisibility(changedId, animationStateRef) {
+    const animState = animationStateRef.current;
+    
+    switch(changedId) {
+        case "home":
+            animState.targetSphereScale = 1;
+            animState.targetBoxScale = 0;
+            break;
+        case "about":
+        case "projects":
+        case "contact":
+            animState.targetSphereScale = 0;
+            animState.targetBoxScale = 0;
+            break;
+    }
+}
+
+
+function CanvasBuilder({activeButtonId}) {
     const canvasRef = useRef(null);
     const animationStateRef = useRef({
-        targetRotation: { x: 0, y: 0, z: 0 },
-        targetPosition: { x: 0, y: 0, z: 10 },
-        targetScale: 1,
-        targetColor: new THREE.Color('#aaa9ad')
+        targetSphereScale: 1,
+        targetBoxScale: 0
     });
 
-
     useEffect(() => { // basically our init
+        console.log("init")
         const canvas = canvasRef.current;
 
         // Renderer using React-managed canvas
@@ -42,6 +60,9 @@ function CanvasBuilder({ scrollState }) {
         });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
+
+        noise = openSimplexNoise.makeNoise4D(Date.now());
+        clock = new THREE.Clock();
 
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050505); // Dark background
@@ -56,16 +77,16 @@ function CanvasBuilder({ scrollState }) {
 
         // Sphere
         const radius = 1;
-        let geometry = new THREE.SphereGeometry(radius, 128, 128); 
+        let sphereGeometry = new THREE.SphereGeometry(radius, 128, 128); 
 
         let nPos = [];
         let v3 = new THREE.Vector3();
-        let pos = geometry.attributes.position;
+        let pos = sphereGeometry.attributes.position;
         for (let i = 0; i < pos.count; i++){
             v3.fromBufferAttribute(pos, i).normalize();
             nPos.push(v3.clone());
         }
-        geometry.userData.nPos = nPos;
+        sphereGeometry.userData.nPos = nPos;
 
         let material = new THREE.MeshStandardMaterial({
             color: '#aaa9ad',
@@ -74,11 +95,14 @@ function CanvasBuilder({ scrollState }) {
             envMap: new THREE.PMREMGenerator(renderer).fromScene(scene)
         });
 
-        sphere = new THREE.Mesh(geometry, material);
+        sphere = new THREE.Mesh(sphereGeometry, material);
         scene.add(sphere);
 
-        noise = openSimplexNoise.makeNoise4D(Date.now());
-        clock = new THREE.Clock();
+
+        let boxGeo = new THREE.BoxGeometry(1,1,1);
+        box = new THREE.Mesh(boxGeo, material);
+        box.scale.x = 0;
+        scene.add(box);
 
         const light = new THREE.DirectionalLight(0xffffff, 1);
         light.position.set(2, 2, 2);
@@ -88,42 +112,7 @@ function CanvasBuilder({ scrollState }) {
         light2.position.set(-2,2,2);
         scene.add(light2);
 
-        // Section-based animations
-        const handleSectionChange = (event) => {
-            const { section } = event.detail;
-            const animState = animationStateRef.current;
-            
-            switch(section) {
-                case 0: // Title section
-                    animState.targetPosition = { x: 0, y: 0, z: 10 };
-                    animState.targetScale = 1;
-                    break;
-                case 1: // First content section
-                case 3:
-                    animState.targetPosition = { x: 3, y: 0, z: 10 };
-                    animState.targetScale = 0.8;
-                    break;
-                case 2: // Second content section
-                    animState.targetPosition = { x: -3, y: 0, z: 10 };
-                    animState.targetScale = 1.2;
-                    break;
-                default:
-                    break;
-            }
-        };
-
-        // Smooth scroll-based animations
-        const handleScrollProgress = (event) => {
-            const { progress } = event.detail;
-            // Subtle rotation based on scroll position
-            const baseRotationY = progress * Math.PI * 2;
-            animationStateRef.current.targetRotation.y = baseRotationY * 0.1;
-        };
-
-        // Add event listeners
-        window.addEventListener('sectionChange', handleSectionChange);
-        window.addEventListener('scrollProgress', handleScrollProgress);
-
+    
         // Smooth interpolation function
         const lerp = (start, end, factor) => {
             return start + (end - start) * factor;
@@ -143,23 +132,18 @@ function CanvasBuilder({ scrollState }) {
             const lerpFactor = 0.05; // Adjust for animation speed
             const animState = animationStateRef.current;
             
-            // Smoothly interpolate position
-            lerpVector3(camera.position, animState.targetPosition, lerpFactor);
-            
-            // Smoothly interpolate rotation
-            sphere.rotation.x = lerp(sphere.rotation.x, animState.targetRotation.x, lerpFactor);
-            sphere.rotation.y = lerp(sphere.rotation.y, animState.targetRotation.y, lerpFactor);
-            sphere.rotation.z = lerp(sphere.rotation.z, animState.targetRotation.z, lerpFactor);
             
             // Smoothly interpolate scale
-            const currentScale = sphere.scale.x;
-            const newScale = lerp(currentScale, animState.targetScale, lerpFactor);
-            sphere.scale.setScalar(newScale);
+            const currentSphereScale = sphere.scale.x;
+            const newSphereScale = lerp(currentSphereScale, animState.targetSphereScale, lerpFactor);
+            sphere.scale.setScalar(newSphereScale);
             
-            // Smoothly interpolate color
-            sphere.material.color.lerp(animState.targetColor, lerpFactor);
-            
-            geometry = liquidMetal(geometry, radius);
+            const currentBoxScale = box.scale.x;
+            const newBoxScale = lerp(currentBoxScale, animState.targetBoxScale, lerpFactor);
+            box.scale.setScalar(newBoxScale);
+
+
+            sphereGeometry = liquidMetal(sphereGeometry, radius);
             pos.needsUpdate = true;
             
             
@@ -177,11 +161,16 @@ function CanvasBuilder({ scrollState }) {
         // Cleanup
         return () => {
             window.removeEventListener('resize', onWindowResize);
-            window.removeEventListener('sectionChange', handleSectionChange);
-            window.removeEventListener('scrollProgress', handleScrollProgress);
             renderer.dispose();
         };
     }, []);
+
+    useEffect(() => {
+        console.log("Hello from canvasBuilder ", activeButtonId);
+        if (activeButtonId) {
+            changeSceneVisibility(activeButtonId, animationStateRef);
+        }
+    }, [activeButtonId]);
 
     return (
         <canvas ref={canvasRef}/>

@@ -3,69 +3,21 @@
   src: url(./fonts/SpaceGrotesk.ttf);
 }
 
+@import url('https://fonts.googleapis.com/css?family=Oswald');
+
 :root {
     --light: #f4f4f4;
+    --card-background: #2f2f2f;
 }
 
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  scroll-behavior: smooth;
-  scroll-snap-type: y mandatory;
-  overflow-y: scroll;
-}
-
-.title-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 0;
-  font-family: "Space Grotesk";
-  color: rgba(255,255,255,255);
-  height: 100%;
-  font-size: xx-large;
-}
-
-
-
-
-.content-wrapper {
-  z-index: 0;
-  font-family: "Space Grotesk";
   color: white;
-  height: 100%;
+  font-size: large;  
 }
 
-.snaptarget {
-  scroll-snap-align: start;
-  height: 100vh;
-  width: 100%;
-  display: flex;
-  align-items: center;     
-  padding: 2rem;
-  box-sizing: border-box;
-}
-
-.content-section {
-  display: flex;
-  flex-direction: column;
-  max-width: 50vw;
-}
-
-.snaptarget:nth-child(even) {
-  justify-content: flex-start;  /* Align to left */
-}
-
-.snaptarget:nth-child(odd) {
-  justify-content: flex-end;    /* Align to right */
-}
-
-.title-section:first-child { 
-  padding: 20vh;
-  justify-content: center; /* This is the title section want it in the center instead of left/right */
-  align-items: baseline;
-}
 
 canvas {
   position: fixed;
@@ -76,3 +28,123 @@ canvas {
   z-index: -1;
   pointer-events: none;
 }
+
+.name-display {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20%; 
+  pointer-events: none;
+  z-index: 1;
+}
+
+.firstname {
+  transform: translateX(-15vw); 
+  font-size: 50pt;
+  font-weight: bold;
+  font-style: italic;
+  font-family: "Oswald", sans-serif;
+}
+
+.lastname {
+  transform: translateX(15vw);  
+  font-size: 50pt;
+  font-style: italic;
+  font-weight: bold;
+  font-family: "Oswald", sans-serif;
+}
+
+.bottom-navigation {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 0 20px;
+    pointer-events: none;
+}
+
+.nav-button {
+    background: rgba(170, 169, 173, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    pointer-events: auto;
+}
+
+.nav-button:hover {
+    background: var(--card-background);
+    transform: translateY(-2px);
+}
+
+.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    transition: all 0.8s ease-out;
+}
+
+.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-100px); /* or 100px for right */
+    transition: all 0.15s ease-out;
+}
+
+.two-column-grid {
+  display: grid;
+  grid-template-columns: repeat(2, clamp(200px, 25vw, 300px)); /* Responsive card width */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  gap: clamp(20px, 10vw, 80px); /* Responsive gap */
+  justify-content: center;
+  z-index: 1;
+}
+
+
+.card {
+  background: var(--card-background);
+  border: 1px solid grey;
+  border-radius: 12px;
+  padding: clamp(16px, 3vw, 24px); /* Responsive padding */
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  text-align: center;
+  aspect-ratio: 1.2; /* Maintains consistent proportions */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.card:hover {
+  background: var(--card-background);
+  transform: translateY(-5px);
+  border-color: white;
+}
+
+.item {
+  margin-bottom: 20px;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.list-title {
+  font-weight: bold;
+  font-size: larger;
+}
+
