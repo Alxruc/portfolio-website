@@ -2,10 +2,37 @@ import { useEffect, useRef } from 'react'
 import openSimplexNoise from 'https://cdn.skypack.dev/open-simplex-noise';
 
 import * as THREE from 'three';
+import { mx_bilerp_0 } from 'three/src/nodes/materialx/lib/mx_noise.js';
 
 let camera, scene, clock, noise;
-let sphere, box;
+let sphere, points;
 
+const numParticles = 6000;
+
+function flowfield_animation(point_positions, point_velocities, height, width) {
+    const halfW = width / 2;
+    const halfH = height / 2;
+
+    for (let i = 0; i < numParticles; i++) {
+        const x = point_positions[i * 3] * 0.5;
+        const y = point_positions[i * 3 + 1] * 0.5;
+        const t = performance.now() * 0.0001;
+
+        // Get angle from noise
+        const angle = noise(x, y, 0, t) * Math.PI * 2;
+        point_velocities[i * 3] = 0.02 * (Math.cos(angle) + (Math.random() - 0.5));
+        point_velocities[i * 3 + 1] = 0.02 * (Math.sin(angle) + (Math.random() - 0.5));
+
+        point_positions[i * 3] += point_velocities[i * 3];
+        point_positions[i * 3 + 1] += point_velocities[i * 3 + 1];
+
+        // Wrap around screen edges
+        if (point_positions[i * 3] > halfW) point_positions[i * 3] = -halfW;
+        if (point_positions[i * 3] < -halfW) point_positions[i * 3] = halfW;
+        if (point_positions[i * 3 + 1] > halfH) point_positions[i * 3 + 1] = -halfH;
+        if (point_positions[i * 3 + 1] < -halfH) point_positions[i * 3 + 1] = halfH;
+    }
+}
 
 function liquidMetal(geometry, radius) {
     // Effect that makes the sphere seem liquid / goo-like
@@ -30,13 +57,13 @@ function changeSceneVisibility(changedId, animationStateRef) {
     switch(changedId) {
         case "home":
             animState.targetSphereScale = 1;
-            animState.targetBoxScale = 0;
+            animState.targetPointOpacity = 0;
             break;
         case "about":
         case "projects":
         case "contact":
             animState.targetSphereScale = 0;
-            animState.targetBoxScale = 0;
+            animState.targetPointOpacity = 1;
             break;
     }
 }
@@ -46,7 +73,7 @@ function CanvasBuilder({activeButtonId}) {
     const canvasRef = useRef(null);
     const animationStateRef = useRef({
         targetSphereScale: 1,
-        targetBoxScale: 0
+        targetPointOpacity: 0,
     });
 
     useEffect(() => { // basically our init
@@ -67,8 +94,9 @@ function CanvasBuilder({activeButtonId}) {
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050505); // Dark background
 
+        let fov = 70;
         camera = new THREE.PerspectiveCamera(
-            70,
+            fov,
             window.innerWidth / window.innerHeight,
             0.1,
             100
@@ -99,11 +127,6 @@ function CanvasBuilder({activeButtonId}) {
         scene.add(sphere);
 
 
-        let boxGeo = new THREE.BoxGeometry(1,1,1);
-        box = new THREE.Mesh(boxGeo, material);
-        box.scale.x = 0;
-        scene.add(box);
-
         const light = new THREE.DirectionalLight(0xffffff, 1);
         light.position.set(2, 2, 2);
         scene.add(light);
@@ -111,6 +134,33 @@ function CanvasBuilder({activeButtonId}) {
         const light2 = new THREE.DirectionalLight(0xffffff, 1);
         light2.position.set(-2,2,2);
         scene.add(light2);
+
+
+
+        const point_positions = new Float32Array(numParticles * 3);
+        const point_velocities = new Float32Array(numParticles * 3);
+
+        let fovRad = fov/360 * 2 * Math.PI
+        let height = 2 * Math.tan(fovRad / 2) * camera.position.z; // get how far to the top the camera can see
+        let width = height * camera.aspect;
+
+        // Initialize positions and velocities
+        for (let i = 0; i < numParticles; i++) {
+            point_positions[i * 3] = (Math.random() - 0.5) * width;
+            point_positions[i * 3 + 1] = (Math.random() - 0.5) * height;
+            point_positions[i * 3 + 2] = 0;
+            point_velocities[i * 3] = 0;
+            point_velocities[i * 3 + 1] = 0;
+            point_velocities[i * 3 + 2] = 0;
+        }
+
+        const pgeometry = new THREE.BufferGeometry();
+        pgeometry.setAttribute('position', new THREE.BufferAttribute(point_positions, 3));
+
+        const pmaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.01, opacity: 0, transparent: true});
+        points = new THREE.Points(pgeometry, pmaterial);
+        scene.add(points);
+
 
     
         // Smooth interpolation function
@@ -137,14 +187,20 @@ function CanvasBuilder({activeButtonId}) {
             const currentSphereScale = sphere.scale.x;
             const newSphereScale = lerp(currentSphereScale, animState.targetSphereScale, lerpFactor);
             sphere.scale.setScalar(newSphereScale);
+
+            const currentPointOpacity = points.material.opacity;
+            const newPointOpacity = lerp(currentPointOpacity, animState.targetPointOpacity, lerpFactor);
+            points.material.opacity = newPointOpacity;
+
+            if (sphere.scale.x > 0) {
+                sphereGeometry = liquidMetal(sphereGeometry, radius);
+                pos.needsUpdate = true;
+            } 
             
-            const currentBoxScale = box.scale.x;
-            const newBoxScale = lerp(currentBoxScale, animState.targetBoxScale, lerpFactor);
-            box.scale.setScalar(newBoxScale);
-
-
-            sphereGeometry = liquidMetal(sphereGeometry, radius);
-            pos.needsUpdate = true;
+            if(points.material.opacity != 0) {
+                flowfield_animation(point_positions, point_velocities, height, width);
+                pgeometry.attributes.position.needsUpdate = true;
+            }
             
             
             renderer.render(scene, camera);
@@ -155,6 +211,7 @@ function CanvasBuilder({activeButtonId}) {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            width = height * camera.aspect;
         };
         window.addEventListener('resize', onWindowResize);
 
