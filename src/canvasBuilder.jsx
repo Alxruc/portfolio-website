@@ -7,7 +7,7 @@ import { mx_bilerp_0 } from 'three/src/nodes/materialx/lib/mx_noise.js';
 let camera, scene, clock, noise;
 let sphere, points;
 
-const numParticles = 6000;
+const numParticles = 7000;
 
 function flowfield_animation(point_positions, point_velocities, height, width) {
     const halfW = width / 2;
@@ -20,7 +20,7 @@ function flowfield_animation(point_positions, point_velocities, height, width) {
 
         // Get angle from noise
         const angle = noise(x, y, 0, t) * Math.PI * 2;
-        point_velocities[i * 3] = 0.02 * (Math.cos(angle) + (Math.random() - 0.5));
+        point_velocities[i * 3] = 0.02 * (Math.cos(angle) + 3 * (Math.random() - 0.5)); // adding some random values to make things a little less uniform
         point_velocities[i * 3 + 1] = 0.02 * (Math.sin(angle) + (Math.random() - 0.5));
 
         point_positions[i * 3] += point_velocities[i * 3];
@@ -28,9 +28,9 @@ function flowfield_animation(point_positions, point_velocities, height, width) {
 
         // Wrap around screen edges
         if (point_positions[i * 3] > halfW) point_positions[i * 3] = -halfW;
-        if (point_positions[i * 3] < -halfW) point_positions[i * 3] = halfW;
+        else if (point_positions[i * 3] < -halfW) point_positions[i * 3] = halfW;
         if (point_positions[i * 3 + 1] > halfH) point_positions[i * 3 + 1] = -halfH;
-        if (point_positions[i * 3 + 1] < -halfH) point_positions[i * 3 + 1] = halfH;
+        else if (point_positions[i * 3 + 1] < -halfH) point_positions[i * 3 + 1] = halfH;
     }
 }
 
@@ -211,6 +211,8 @@ function CanvasBuilder({activeButtonId}) {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            let fovRad = fov / 360 * 2 * Math.PI;
+            height = 2 * Math.tan(fovRad / 2) * camera.position.z;
             width = height * camera.aspect;
         };
         window.addEventListener('resize', onWindowResize);

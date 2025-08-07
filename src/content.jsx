@@ -1,5 +1,6 @@
-import "./content.css"
-import CanvasBuilder from './canvasBuilder.jsx'
+import "./content.css";
+import CanvasBuilder from './canvasBuilder.jsx';
+import ProjectsBuilder from "./projects.jsx";
 import { useEffect, useRef, createContext, useContext, useState } from 'react';
 
 // Create a context to share scroll state with the canvas
@@ -82,8 +83,8 @@ function ContentBuilder() {
             </div>
 
             {/* Project Tab */}
-            <div className={`${activeButtonId === 'projects' ? 'visible' : 'hidden'}`}>
-                <h1> Projects </h1>
+            <div className={`projects-section ${activeButtonId === 'projects' ? 'visible' : 'hidden'}`}>
+                <ProjectsBuilder></ProjectsBuilder>
             </div>
 
             {/* Canvas */}

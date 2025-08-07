@@ -1,13 +1,16 @@
+@import url('https://fonts.googleapis.com/css?family=Oswald');
+
 @font-face {
   font-family: "Space Grotesk";
   src: url(./fonts/SpaceGrotesk.ttf);
 }
 
-@import url('https://fonts.googleapis.com/css?family=Oswald');
+
 
 :root {
     --light: #f4f4f4;
-    --card-background: #2f2f2f;
+    --card-background: #57575704;
+    --button-background: rgba(170, 169, 173, 0.2);
 }
 
 html, body {
@@ -18,7 +21,6 @@ html, body {
   font-size: large;  
 }
 
-
 canvas {
   position: fixed;
   top: 0;
@@ -27,6 +29,53 @@ canvas {
   height: 100vh;
   z-index: -1;
   pointer-events: none;
+}
+
+
+.bottom-navigation {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 0 20px;
+    pointer-events: none;
+}
+
+.nav-button {
+    background: var(--button-background);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    pointer-events: auto;
+}
+
+.nav-button:hover {
+    background: var(--card-background);
+    transform: translateY(-2px);
+}
+
+.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    transition: all 0.8s ease-out;
+}
+
+.hidden {
+    opacity: 0;
+    visibility: hidden;
+    display: none;
+    transform: translateX(-100px); /* or 100px for right */
+    transition: all 0.15s ease-out;
 }
 
 .name-display {
@@ -57,51 +106,6 @@ canvas {
   font-family: "Oswald", sans-serif;
 }
 
-.bottom-navigation {
-    position: absolute;
-    bottom: 40px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-    padding: 0 20px;
-    pointer-events: none;
-}
-
-.nav-button {
-    background: rgba(170, 169, 173, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #ffffff;
-    padding: 12px 24px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-    pointer-events: auto;
-}
-
-.nav-button:hover {
-    background: var(--card-background);
-    transform: translateY(-2px);
-}
-
-.visible {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(0);
-    transition: all 0.8s ease-out;
-}
-
-.hidden {
-    opacity: 0;
-    visibility: hidden;
-    transform: translateX(-100px); /* or 100px for right */
-    transition: all 0.15s ease-out;
-}
-
 .two-column-grid {
   display: grid;
   grid-template-columns: repeat(2, clamp(200px, 25vw, 300px)); /* Responsive card width */
@@ -120,7 +124,7 @@ canvas {
   border: 1px solid grey;
   border-radius: 12px;
   padding: clamp(16px, 3vw, 24px); /* Responsive padding */
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(5px);
   transition: all 0.3s ease;
   text-align: center;
   aspect-ratio: 1.2; /* Maintains consistent proportions */
@@ -146,5 +150,14 @@ canvas {
 .list-title {
   font-weight: bold;
   font-size: larger;
+}
+
+.projects-section {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    text-align: center;
 }
 
