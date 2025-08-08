@@ -20,16 +20,20 @@ function ContentBuilder() {
         setActiveButtonId(buttonId)
     };
 
+    
+
 
     return (            
         <div>
             {/* Home Tab */}
             <div className={`name-display ${activeButtonId === 'home' ? 'visible' : 'hidden'}`}>
                 <div className="firstname">
-                    Alexander
+                    Firstname
+                    <div className="gradient-line"></div>
                 </div>
                 <div className="lastname">
-                    Ruchti
+                    Lastname
+                    <div className="gradient-line-back"></div>
                 </div>
 
             </div>
@@ -85,6 +89,16 @@ function ContentBuilder() {
             {/* Project Tab */}
             <div className={`projects-section ${activeButtonId === 'projects' ? 'visible' : 'hidden'}`}>
                 <ProjectsBuilder></ProjectsBuilder>
+            </div>
+
+            {/* Contact Tab */}
+            <div className={`contact-section ${activeButtonId === 'contact' ? 'visible' : 'hidden'}`}>
+                <div className="contact-card">
+                    <h1>Contact Me</h1>
+                    <h2 className="item">
+                        E-Mail: ruchtialex@gmail.com
+                    </h2>
+                </div>
             </div>
 
             {/* Canvas */}

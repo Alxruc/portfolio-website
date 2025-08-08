@@ -77,33 +77,35 @@ canvas {
     transform: translateX(-100px); /* or 100px for right */
     transition: all 0.15s ease-out;
 }
-
 .name-display {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 20%; 
   pointer-events: none;
-  z-index: 1;
+  z-index: 5;
 }
 
 .firstname {
-  transform: translateX(-15vw); 
-  font-size: 50pt;
+  position: absolute;
+  top: 15%;
+  left: 15%;
+  font-size: clamp(32px, 8vw, 50pt);
   font-weight: bold;
   font-style: italic;
   font-family: "Oswald", sans-serif;
 }
 
 .lastname {
-  transform: translateX(15vw);  
-  font-size: 50pt;
+  position: absolute;
+  bottom: 15%; 
+  right: 15%; 
+  font-size: clamp(32px, 8vw, 50pt);
   font-style: italic;
   font-weight: bold;
   font-family: "Oswald", sans-serif;
+  text-align: right; /* Align text to the right */
 }
 
 .two-column-grid {
@@ -153,11 +155,52 @@ canvas {
 }
 
 .projects-section {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1;
-    text-align: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  text-align: center;
 }
 
+.contact-section {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  text-align: center;
+}
+
+.contact-card {
+  background: var(--card-background);
+  border: 1px solid grey;
+  border-radius: 12px;
+  padding: clamp(16px, 3vw, 24px); /* Responsive padding */
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: clamp(200px, 50vh, 1000px);
+  min-width:  clamp(200px, 50vw, 1000px);
+}
+
+.gradient-line {
+    width: 4rem; /* w-16 = 64px = 4rem */
+    height: 1px; /* h-px */
+    background: linear-gradient(to right, white, transparent); /* bg-gradient-to-r from-white to-transparent */
+    opacity: 0.6; /* opacity-60 */
+}
+
+
+.gradient-line-back {
+    width: 4rem; /* w-16 = 64px = 4rem */
+    height: 1px; /* h-px */
+    background: linear-gradient(to left, white, transparent); /* Changed from 'to right' to 'to left' */
+    opacity: 0.6; /* opacity-60 */
+    margin-left: auto; /* This will push the line to the right side */
+}

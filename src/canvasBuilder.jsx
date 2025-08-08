@@ -6,8 +6,11 @@ import { mx_bilerp_0 } from 'three/src/nodes/materialx/lib/mx_noise.js';
 
 let camera, scene, clock, noise;
 let sphere, points;
+let pgeometry;
 
 const numParticles = 7000;
+const point_positions = new Float32Array(numParticles * 3);
+const point_velocities = new Float32Array(numParticles * 3);
 
 function flowfield_animation(point_positions, point_velocities, height, width) {
     const halfW = width / 2;
@@ -34,6 +37,18 @@ function flowfield_animation(point_positions, point_velocities, height, width) {
     }
 }
 
+function initializeParticlePositions(width, height) {
+    // Initialize positions and velocities
+    for (let i = 0; i < numParticles; i++) {
+        point_positions[i * 3] = (Math.random() - 0.5) * width;
+        point_positions[i * 3 + 1] = (Math.random() - 0.5) * height;
+        point_positions[i * 3 + 2] = 0;
+        point_velocities[i * 3] = 0;
+        point_velocities[i * 3 + 1] = 0;
+        point_velocities[i * 3 + 2] = 0;
+    }
+}
+
 function liquidMetal(geometry, radius) {
     // Effect that makes the sphere seem liquid / goo-like
     if(!clock || !noise) {
@@ -51,19 +66,21 @@ function liquidMetal(geometry, radius) {
     return geometry
 }
 
-function changeSceneVisibility(changedId, animationStateRef) {
+function changeSceneVisibility(changedId, animationStateRef, width, height) {
     const animState = animationStateRef.current;
     
     switch(changedId) {
         case "home":
             animState.targetSphereScale = 1;
-            animState.targetPointOpacity = 0;
+            animState.particleFlag = false;
+            initializeParticlePositions(width, height);
+            pgeometry.attributes.position.needsUpdate = true;
             break;
         case "about":
         case "projects":
         case "contact":
             animState.targetSphereScale = 0;
-            animState.targetPointOpacity = 1;
+            animState.particleFlag = true;
             break;
     }
 }
@@ -73,8 +90,9 @@ function CanvasBuilder({activeButtonId}) {
     const canvasRef = useRef(null);
     const animationStateRef = useRef({
         targetSphereScale: 1,
-        targetPointOpacity: 0,
+        particleFlag: false,
     });
+    const dimensionsRef = useRef({ width: 0, height: 0 });
 
     useEffect(() => { // basically our init
         console.log("init")
@@ -136,28 +154,17 @@ function CanvasBuilder({activeButtonId}) {
         scene.add(light2);
 
 
-
-        const point_positions = new Float32Array(numParticles * 3);
-        const point_velocities = new Float32Array(numParticles * 3);
-
         let fovRad = fov/360 * 2 * Math.PI
         let height = 2 * Math.tan(fovRad / 2) * camera.position.z; // get how far to the top the camera can see
         let width = height * camera.aspect;
 
-        // Initialize positions and velocities
-        for (let i = 0; i < numParticles; i++) {
-            point_positions[i * 3] = (Math.random() - 0.5) * width;
-            point_positions[i * 3 + 1] = (Math.random() - 0.5) * height;
-            point_positions[i * 3 + 2] = 0;
-            point_velocities[i * 3] = 0;
-            point_velocities[i * 3 + 1] = 0;
-            point_velocities[i * 3 + 2] = 0;
-        }
+        dimensionsRef.current = {width, height}
+        initializeParticlePositions(width, height);
 
-        const pgeometry = new THREE.BufferGeometry();
+        pgeometry = new THREE.BufferGeometry();
         pgeometry.setAttribute('position', new THREE.BufferAttribute(point_positions, 3));
 
-        const pmaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.01, opacity: 0, transparent: true});
+        const pmaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.01});
         points = new THREE.Points(pgeometry, pmaterial);
         scene.add(points);
 
@@ -188,19 +195,16 @@ function CanvasBuilder({activeButtonId}) {
             const newSphereScale = lerp(currentSphereScale, animState.targetSphereScale, lerpFactor);
             sphere.scale.setScalar(newSphereScale);
 
-            const currentPointOpacity = points.material.opacity;
-            const newPointOpacity = lerp(currentPointOpacity, animState.targetPointOpacity, lerpFactor);
-            points.material.opacity = newPointOpacity;
 
             if (sphere.scale.x > 0) {
                 sphereGeometry = liquidMetal(sphereGeometry, radius);
                 pos.needsUpdate = true;
             } 
             
-            if(points.material.opacity != 0) {
+            if(animState.particleFlag) {
                 flowfield_animation(point_positions, point_velocities, height, width);
-                pgeometry.attributes.position.needsUpdate = true;
             }
+            pgeometry.attributes.position.needsUpdate = true;
             
             
             renderer.render(scene, camera);
@@ -214,6 +218,7 @@ function CanvasBuilder({activeButtonId}) {
             let fovRad = fov / 360 * 2 * Math.PI;
             height = 2 * Math.tan(fovRad / 2) * camera.position.z;
             width = height * camera.aspect;
+            dimensionsRef.current = { width, height };
         };
         window.addEventListener('resize', onWindowResize);
 
@@ -225,9 +230,9 @@ function CanvasBuilder({activeButtonId}) {
     }, []);
 
     useEffect(() => {
-        console.log("Hello from canvasBuilder ", activeButtonId);
         if (activeButtonId) {
-            changeSceneVisibility(activeButtonId, animationStateRef);
+            const { width, height } = dimensionsRef.current;
+            changeSceneVisibility(activeButtonId, animationStateRef, width, height);
         }
     }, [activeButtonId]);
 
