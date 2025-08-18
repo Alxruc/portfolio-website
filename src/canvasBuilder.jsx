@@ -1,167 +1,57 @@
 import { useEffect, useRef } from 'react'
-import openSimplexNoise from 'https://cdn.skypack.dev/open-simplex-noise';
 
 import * as THREE from 'three';
 
-let camera, scene, clock, noise;
-let sphere, points;
-let pgeometry;
+// Import shaders as text
+import vertexShader from './shaders/particles.v.glsl?raw';
+import fragmentShader from './shaders/particles.f.glsl?raw';
 
-const numParticles = 7000;
-const point_positions = new Float32Array(numParticles * 3);
-const point_velocities = new Float32Array(numParticles * 3);
+let camera, scene, clock, renderer;
+let points, particleGeometry, particleMaterial;
+let shaderUniforms;
 
-function convergeToCenter(geometry, deltaTime, animStateRef, radius) {
-    const animState = animStateRef.current;
-    const pos = geometry.attributes.position;
-    const convergenceSpeed = 500.0;
-    let allConverged = true;
-    const convergenceThreshold = 1; 
-    let convergedCount = 0;
-
-    for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i);
-        const y = pos.getY(i);
-        const z = pos.getZ(i);
-        
-        // Calculate distance to center
-        const distance = Math.sqrt(x * x + y * y + z * z);
-        
-        // Skip particles that are too close to origin (division by zero)
-        if (distance < 0.001) {
-            continue;
-        }
-        
-        // Get target position on sphere surface
-        const targetX = (x / distance) * radius;
-        const targetY = (y / distance) * radius;
-        const targetZ = (z / distance) * radius;
-        
-        // Calculate distance to target sphere position
-        const distanceToTarget = Math.sqrt(
-            (x - targetX) * (x - targetX) + 
-            (y - targetY) * (y - targetY) + 
-            (z - targetZ) * (z - targetZ)
-        );
-        
-        // Check if particle needs to move
-        if (distanceToTarget > convergenceThreshold) {
-            allConverged = false;
-            
-            // Move towards target sphere position
-            const dirX = (targetX - x) / distanceToTarget;
-            const dirY = (targetY - y) / distanceToTarget;
-            const dirZ = (targetZ - z) / distanceToTarget;
-            
-            const moveDistance = convergenceSpeed * deltaTime;
-            const actualMoveDistance = Math.min(moveDistance, distanceToTarget);
-            
-            const newX = x + dirX * actualMoveDistance;
-            const newY = y + dirY * actualMoveDistance;
-            const newZ = z + dirZ * actualMoveDistance;
-            
-            pos.setXYZ(i, newX, newY, newZ);
-        } else {
-            convergedCount++;
-        }
-    }
-    
-    pos.needsUpdate = true;
-    animState.allConverged = allConverged;
-}
-
-
-function flowfield_animation(geometry, height, width, deltaTime) {
-    const halfW = width / 2;
-    const halfH = height / 2;
-    const pos = geometry.attributes.position;
-
-    for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i) * 0.1;
-        const y = pos.getY(i) * 0.1;
-        const t = performance.now() * 0.0001;
-
-
-        // Get angle from noise
-        const angle = noise(x, y, 0, t) * Math.PI * 2;
-        const speed = 4.0;
-        const velX = speed * deltaTime * (Math.cos(angle) + 3 * Math.random() - 1.5 ); // adding a bit of randomness so they dont all bunch up
-        const velY = speed * deltaTime * (Math.sin(angle) + 1 * Math.random() - 0.5);
-
-        const newX = pos.getX(i) + velX;
-        const newY = pos.getY(i) + velY;
-
-        // Wrap around screen edges
-        let finalX = newX;
-        let finalY = newY;
-        
-        if (newX > halfW) finalX = -halfW;
-        else if (newX < -halfW) finalX = halfW;
-        if (newY > halfH) finalY = -halfH;
-        else if (newY < -halfH) finalY = halfH;
-
-        pos.setXYZ(i, finalX, finalY, 0);
-    }
-    
-    pos.needsUpdate = true;
-}
-
-
-function initializeParticlePositions(width, height) {
-    // Initialize positions and velocities
-    for (let i = 0; i < numParticles; i++) {
-        point_positions[i * 3] = (Math.random() - 0.5) * width;
-        point_positions[i * 3 + 1] = (Math.random() - 0.5) * height;
-        point_positions[i * 3 + 2] = 0;
-        point_velocities[i * 3] = 0;
-        point_velocities[i * 3 + 1] = 0;
-        point_velocities[i * 3 + 2] = 0;
-    }
-}
-
-function liquidMetal(geometry, radius) {
-    // Effect that makes the sphere seem liquid / goo-like
-    if(!clock || !noise) {
-        return geometry;
-    }
-    let t = clock.getElapsedTime();
-    let v3 = new THREE.Vector3();
-    let pos = geometry.attributes.position;
-    geometry.userData.nPos.forEach((p, idx) => {
-        let ns = noise(p.x, p.y, p.z, t);
-        v3.copy(p).multiplyScalar(radius).addScaledVector(p, ns);
-        pos.setXYZ(idx, v3.x, v3.y, v3.z);
-    });
-    geometry.computeVertexNormals();
-    pos.needsUpdate = true;
-}
-
-function changeSceneVisibility(changedId, animationStateRef, width, height) {
+function changeSceneVisibility(changedId, animationStateRef) {
     const animState = animationStateRef.current;
     
     switch(changedId) {
         case "home":
-            animState.targetSphereScale = 1;
-            animState.particleFlag = false;
-            animState.allConverged = false;
+            // If coming from flowfield, first converge then go to rotating sphere
+            if (animState.animationMode === 0) {
+                animState.animationMode = 1; // converge first
+                animState.targetMode = 2; // then rotating sphere
+                animState.convergenceStartTime = performance.now();
+                animState.convergenceDuration = 1000; // 1 second to converge
+            } else {
+                animState.animationMode = 2; // direct to rotating sphere
+                animState.targetMode = 2;
+            }
+            // Reset flowfield for next time
+            animState.flowfieldStartTime = -1; // Will be set when flowfield starts again
             break;
         case "about":
         case "projects":
         case "contact":
-            animState.targetSphereScale = 0;
-            animState.particleFlag = true;
-            animState.allConverged = false;
+            if (animState.animationMode != 0) {
+                animState.animationMode = 0; // flowfield
+                animState.targetMode = 0;
+                // Mark that flowfield start time needs to be set (will be set in animation loop)
+                animState.flowfieldStartTime = -1;
+            }
             break;
     }
 }
+
+
 
 
 function CanvasBuilder({activeButtonId}) {
     const canvasRef = useRef(null);
     const animationStateRef = useRef({
-        targetSphereScale: 1,
-        particleFlag: false,
-        allConverged: true
+        animationMode: 2, // 0 = flowfield, 1 = converge, 2 = rotating sphere
+        targetMode: 2, // Final target mode after transitions
+        convergenceStartTime: 0,
+        convergenceDuration: 1000,
+        flowfieldStartTime: -1 // Will be set when flowfield starts
     });
     const dimensionsRef = useRef({ width: 0, height: 0 });
 
@@ -170,14 +60,20 @@ function CanvasBuilder({activeButtonId}) {
         const canvas = canvasRef.current;
 
         // Renderer using React-managed canvas
-        const renderer = new THREE.WebGLRenderer({
+        renderer = new THREE.WebGLRenderer({
             canvas: canvas,
             antialias: true,
         });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
 
-        noise = openSimplexNoise.makeNoise4D(Date.now());
+        // Check for float texture support
+        const gl = renderer.getContext();
+        const floatExtension = gl.getExtension('OES_texture_float') || gl.getExtension('WEBGL_color_buffer_float');
+        if (!floatExtension) {
+            console.warn('Float textures not supported, falling back to half float');
+        }
+
         clock = new THREE.Clock();
 
         scene = new THREE.Scene();
@@ -190,95 +86,106 @@ function CanvasBuilder({activeButtonId}) {
             0.1,
             100
         );
-        camera.position.z = 20;
+        camera.position.z = 50;
 
-        // Sphere
-        const radius = 5.0;
-        let sphereGeometry = new THREE.SphereGeometry(radius, 128, 128); 
-
-        let nPos = [];
-        let v3 = new THREE.Vector3();
-        let pos = sphereGeometry.attributes.position;
-        for (let i = 0; i < pos.count; i++){
-            v3.fromBufferAttribute(pos, i).normalize();
-            nPos.push(v3.clone());
-        }
-        sphereGeometry.userData.nPos = nPos;
-
-        // let material = new THREE.MeshStandardMaterial({
-        //     color: '#aaa9ad',
-        //     roughness: 0.3,
-        //     metalness: 1.0,
-        //     envMap: new THREE.PMREMGenerator(renderer).fromScene(scene)
-        // });
-
-        // sphere = new THREE.Mesh(sphereGeometry, material);
-        // scene.add(sphere);
-
-
-        // const light = new THREE.DirectionalLight(0xffffff, 1);
-        // light.position.set(2, 2, 2);
-        // scene.add(light);
-
-        // const light2 = new THREE.DirectionalLight(0xffffff, 1);
-        // light2.position.set(-2,2,2);
-        // scene.add(light2);
-
-
+        // Calculate screen dimensions
         let fovRad = fov/360 * 2 * Math.PI
-        let height = 2 * Math.tan(fovRad / 2) * camera.position.z; // get how far to the top the camera can see
+        let height = 2 * Math.tan(fovRad / 2) * camera.position.z;
         let width = height * camera.aspect;
-
         dimensionsRef.current = {width, height}
-        initializeParticlePositions(width, height);
 
-        pgeometry = new THREE.BufferGeometry();
-        pgeometry.setAttribute('position', new THREE.BufferAttribute(point_positions, 3));
+        // Create sphere geometry for particle positions
+        const radius = 25.0;
+        const sphereGeometry = new THREE.SphereGeometry(radius, 222, 222);
+        const spherePositions = sphereGeometry.attributes.position.array;
+        const particleCount = spherePositions.length / 3;
 
-        const pmaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.01});
-        points = new THREE.Points(sphereGeometry, pmaterial);
+        // Create particle geometry
+        particleGeometry = new THREE.BufferGeometry();
+        
+        // Create positions and original positions
+        const positions = new Float32Array(particleCount * 3);
+        const originalPositions = new Float32Array(particleCount * 3);
+        
+        for (let i = 0; i < particleCount; i++) {
+            const i3 = i * 3;
+            
+            // Initial positions
+            positions[i3] = spherePositions[i3];
+            positions[i3 + 1] = spherePositions[i3 + 1];
+            positions[i3 + 2] = spherePositions[i3 + 2];
+            
+            // Original positions
+            originalPositions[i3] = spherePositions[i3];
+            originalPositions[i3 + 1] = spherePositions[i3 + 1];
+            originalPositions[i3 + 2] = spherePositions[i3 + 2];
+        }
+        
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particleGeometry.setAttribute('originalPosition', new THREE.BufferAttribute(originalPositions, 3));
+
+        // Setup shader uniforms
+        shaderUniforms = {
+            time: { value: 0 },
+            deltaTime: { value: 0 },
+            radius: { value: radius },
+            animationMode: { value: animationStateRef.current.animationMode },
+            dimensions: { value: new THREE.Vector2(width, height) },
+            noiseScale: { value: 0.1 },
+            flowSpeed: { value: 2.0 },
+            flowfieldStartTime: { value: -1 }
+        };
+
+        // Create shader material
+        particleMaterial = new THREE.ShaderMaterial({
+            uniforms: shaderUniforms,
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader
+        });
+
+        // Create points
+        points = new THREE.Points(particleGeometry, particleMaterial);
+        points.rotateX(Math.PI/4.0)
+        points.rotateZ(Math.PI/5.0)
         scene.add(points);
 
-
-    
-        // Smooth interpolation function
-        const lerp = (start, end, factor) => {
-            return start + (end - start) * factor;
-        };
-
-        const lerpVector3 = (current, target, factor) => {
-            current.x = lerp(current.x, target.x, factor);
-            current.y = lerp(current.y, target.y, factor);
-            current.z = lerp(current.z, target.z, factor);
-        };
-
-        // Animation loop
+        // Animation loop        
         const animate = () => {
-            requestAnimationFrame(animate);
-            
-            
-            // Smooth interpolation to target values
-            const lerpFactor = 0.05; // Adjust for animation speed
-            const animState = animationStateRef.current;
-            console.log(animState.allConverged);
-            
-            // // Smoothly interpolate scale
-            // const currentSphereScale = sphere.scale.x;
-            // const newSphereScale = lerp(currentSphereScale, animState.targetSphereScale, lerpFactor);
-            // sphere.scale.setScalar(newSphereScale);
+            setTimeout( function() {
 
+                requestAnimationFrame( animate );
+
+            }, 1000 / 60 );
+            
             const deltaTime = clock.getDelta();
-
-            if (animState.particleFlag) {
-                flowfield_animation(sphereGeometry, height, width, deltaTime);
-            } else if (!animState.allConverged) {
-                convergeToCenter(sphereGeometry, deltaTime, animationStateRef, radius);
-            } else {
-                liquidMetal(sphereGeometry, radius);
+            const elapsedTime = clock.getElapsedTime();
+            const animState = animationStateRef.current;
+            
+            // Handle convergence transition timing
+            if (animState.animationMode === 1 && animState.targetMode === 2) {
+                const convergenceTime = performance.now() - animState.convergenceStartTime;
+                const convergenceProgress = Math.min(convergenceTime / animState.convergenceDuration, 1.0);
+                
+                // Switch to rotating sphere when convergence is complete
+                if (convergenceProgress >= 1.0) {
+                    animState.animationMode = 2;
+                }
             }
             
             
+            // Update shader uniforms
+            shaderUniforms.time.value = elapsedTime;
+            shaderUniforms.deltaTime.value = deltaTime;
+            shaderUniforms.animationMode.value = animState.animationMode;
             
+            // Handle flowfield start time synchronization
+            if (animState.animationMode === 0 && animState.flowfieldStartTime === -1) {
+                // If we just switched to flowfield mode but start time isn't set, set it now
+                animState.flowfieldStartTime = elapsedTime;
+            }
+            shaderUniforms.flowfieldStartTime.value = animState.flowfieldStartTime;
+            
+            // Render particles to screen
             renderer.render(scene, camera);
         };
         animate();
@@ -291,6 +198,11 @@ function CanvasBuilder({activeButtonId}) {
             height = 2 * Math.tan(fovRad / 2) * camera.position.z;
             width = height * camera.aspect;
             dimensionsRef.current = { width, height };
+            
+            // Update shader uniforms
+            if (shaderUniforms) {
+                shaderUniforms.dimensions.value.set(width, height);
+            }
         };
         window.addEventListener('resize', onWindowResize);
 
@@ -298,13 +210,14 @@ function CanvasBuilder({activeButtonId}) {
         return () => {
             window.removeEventListener('resize', onWindowResize);
             renderer.dispose();
+            if (particleGeometry) particleGeometry.dispose();
+            if (particleMaterial) particleMaterial.dispose();
         };
     }, []);
 
     useEffect(() => {
         if (activeButtonId) {
-            const { width, height } = dimensionsRef.current;
-            changeSceneVisibility(activeButtonId, animationStateRef, width, height);
+            changeSceneVisibility(activeButtonId, animationStateRef);
         }
     }, [activeButtonId]);
 
