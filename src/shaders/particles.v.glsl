@@ -2,7 +2,7 @@ precision highp float;
 
 // Custom uniforms (Three.js provides modelViewMatrix and projectionMatrix automatically)
 uniform float time;
-uniform float deltaTime;
+uniform float convergenceProgress;
 uniform float radius;
 uniform int animationMode; // 0 = flowfield, 1 = converge, 2 = rotate
 uniform vec2 dimensions;
@@ -96,10 +96,9 @@ vec3 flowfieldPosition(vec3 basePos) {
     return currentPos;
 }
 
-vec3 convergePosition(vec3 currentPos) {
-    // Converge back to sphere
-    vec3 targetPos = normalize(currentPos) * radius;
-    return mix(currentPos, targetPos, 0.05); // Gradual convergence
+vec3 convergePosition(vec3 currentPos, vec3 originalPos) {
+    // Converge back to original sphere position
+    return mix(currentPos, originalPos, convergenceProgress); // Gradual convergence
 }
 
 void main() {
@@ -109,8 +108,9 @@ void main() {
         // Rotating sphere - use original positions
         newPosition = rotatePosition(originalPosition);
     } else if (animationMode == 1) {
-        // Converging back to sphere
-        newPosition = convergePosition(position);
+        // Converging back to sphere - calculate current flowfield position first, then converge to original
+        vec3 currentFlowfieldPos = flowfieldPosition(originalPosition);
+        newPosition = convergePosition(currentFlowfieldPos, originalPosition);
     } else {
         // Flowfield - dissolve from sphere
         newPosition = flowfieldPosition(originalPosition);

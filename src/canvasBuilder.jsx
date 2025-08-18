@@ -10,6 +10,8 @@ let camera, scene, clock, renderer;
 let points, particleGeometry, particleMaterial;
 let shaderUniforms;
 
+const convergenceDuration = 500
+
 function changeSceneVisibility(changedId, animationStateRef) {
     const animState = animationStateRef.current;
     
@@ -20,7 +22,6 @@ function changeSceneVisibility(changedId, animationStateRef) {
                 animState.animationMode = 1; // converge first
                 animState.targetMode = 2; // then rotating sphere
                 animState.convergenceStartTime = performance.now();
-                animState.convergenceDuration = 1000; // 1 second to converge
             } else {
                 animState.animationMode = 2; // direct to rotating sphere
                 animState.targetMode = 2;
@@ -50,7 +51,6 @@ function CanvasBuilder({activeButtonId}) {
         animationMode: 2, // 0 = flowfield, 1 = converge, 2 = rotating sphere
         targetMode: 2, // Final target mode after transitions
         convergenceStartTime: 0,
-        convergenceDuration: 1000,
         flowfieldStartTime: -1 // Will be set when flowfield starts
     });
     const dimensionsRef = useRef({ width: 0, height: 0 });
@@ -127,7 +127,7 @@ function CanvasBuilder({activeButtonId}) {
         // Setup shader uniforms
         shaderUniforms = {
             time: { value: 0 },
-            deltaTime: { value: 0 },
+            convergenceProgress: { value: 1 },
             radius: { value: radius },
             animationMode: { value: animationStateRef.current.animationMode },
             dimensions: { value: new THREE.Vector2(width, height) },
@@ -164,8 +164,9 @@ function CanvasBuilder({activeButtonId}) {
             // Handle convergence transition timing
             if (animState.animationMode === 1 && animState.targetMode === 2) {
                 const convergenceTime = performance.now() - animState.convergenceStartTime;
-                const convergenceProgress = Math.min(convergenceTime / animState.convergenceDuration, 1.0);
+                const convergenceProgress = Math.min(convergenceTime / convergenceDuration, 1.0);
                 
+                shaderUniforms.convergenceProgress.value = convergenceProgress;
                 // Switch to rotating sphere when convergence is complete
                 if (convergenceProgress >= 1.0) {
                     animState.animationMode = 2;
@@ -175,7 +176,6 @@ function CanvasBuilder({activeButtonId}) {
             
             // Update shader uniforms
             shaderUniforms.time.value = elapsedTime;
-            shaderUniforms.deltaTime.value = deltaTime;
             shaderUniforms.animationMode.value = animState.animationMode;
             
             // Handle flowfield start time synchronization
