@@ -5,10 +5,16 @@ import * as THREE from 'three';
 // Import shaders as text
 import vertexShader from './shaders/particles.v.glsl?raw';
 import fragmentShader from './shaders/particles.f.glsl?raw';
+import positionComputeVertexShader from './shaders/position-compute.v.glsl?raw';
+import positionComputeFragmentShader from './shaders/position-compute.f.glsl?raw';
 
 let camera, scene, clock, renderer;
 let points, particleGeometry, particleMaterial;
 let shaderUniforms;
+let positionTexture1, positionTexture2, originalPositionTexture;
+let renderTarget1, renderTarget2;
+let computeMaterial, computeScene, computeCamera;
+let currentTexture = 0; // 0 or 1 for ping-pong
 
 const convergenceDuration = 500
 
@@ -86,7 +92,7 @@ function CanvasBuilder({activeButtonId}) {
             0.1,
             100
         );
-        camera.position.z = 50;
+        camera.position.z = 5;
 
         // Calculate screen dimensions
         let fovRad = fov/360 * 2 * Math.PI
@@ -95,45 +101,130 @@ function CanvasBuilder({activeButtonId}) {
         dimensionsRef.current = {width, height}
 
         // Create sphere geometry for particle positions
-        const radius = 25.0;
+        const radius = 2.0;
         const sphereGeometry = new THREE.SphereGeometry(radius, 222, 222);
         const spherePositions = sphereGeometry.attributes.position.array;
         const particleCount = spherePositions.length / 3;
 
-        // Create particle geometry
+        // Calculate texture size (square texture to hold all particles)
+        const textureSize = Math.ceil(Math.sqrt(particleCount));
+        const textureData = new Float32Array(textureSize * textureSize * 4); // RGBA
+
+        // Fill texture with particle positions
+        for (let i = 0; i < particleCount; i++) {
+            const i4 = i * 4;
+            const i3 = i * 3;
+            textureData[i4] = spherePositions[i3];     // x
+            textureData[i4 + 1] = spherePositions[i3 + 1]; // y
+            textureData[i4 + 2] = spherePositions[i3 + 2]; // z
+            textureData[i4 + 3] = 1.0; // w (unused)
+        }
+
+        // Create textures for ping-pong
+        const textureOptions = {
+            format: THREE.RGBAFormat,
+            type: THREE.FloatType,
+            minFilter: THREE.NearestFilter,
+            magFilter: THREE.NearestFilter,
+            wrapS: THREE.ClampToEdgeWrapping,
+            wrapT: THREE.ClampToEdgeWrapping
+        };
+
+        // Position textures (ping-pong)
+        positionTexture1 = new THREE.DataTexture(textureData, textureSize, textureSize, THREE.RGBAFormat, THREE.FloatType);
+        positionTexture1.needsUpdate = true;
+        Object.assign(positionTexture1, textureOptions);
+
+        positionTexture2 = new THREE.DataTexture(textureData, textureSize, textureSize, THREE.RGBAFormat, THREE.FloatType);
+        positionTexture2.needsUpdate = true;
+        Object.assign(positionTexture2, textureOptions);
+
+        // Original position texture (constant)
+        originalPositionTexture = new THREE.DataTexture(textureData, textureSize, textureSize, THREE.RGBAFormat, THREE.FloatType);
+        originalPositionTexture.needsUpdate = true;
+        Object.assign(originalPositionTexture, textureOptions);
+
+        // Create render targets for ping-pong
+        renderTarget1 = new THREE.WebGLRenderTarget(textureSize, textureSize, {
+            format: THREE.RGBAFormat,
+            type: THREE.FloatType,
+            minFilter: THREE.NearestFilter,
+            magFilter: THREE.NearestFilter
+        });
+
+        renderTarget2 = new THREE.WebGLRenderTarget(textureSize, textureSize, {
+            format: THREE.RGBAFormat,
+            type: THREE.FloatType,
+            minFilter: THREE.NearestFilter,
+            magFilter: THREE.NearestFilter
+        });
+
+        // Set initial texture content
+        renderer.setRenderTarget(renderTarget1);
+        renderer.clear();
+        renderer.setRenderTarget(renderTarget2);
+        renderer.clear();
+        renderer.setRenderTarget(null);
+
+        // Create particle geometry with texture coordinates
         particleGeometry = new THREE.BufferGeometry();
         
-        // Create positions and original positions
-        const positions = new Float32Array(particleCount * 3);
-        const originalPositions = new Float32Array(particleCount * 3);
+        const particlePositions = new Float32Array(particleCount * 3);
+        const textureIndices = new Float32Array(particleCount * 2);
         
         for (let i = 0; i < particleCount; i++) {
             const i3 = i * 3;
+            const i2 = i * 2;
             
-            // Initial positions
-            positions[i3] = spherePositions[i3];
-            positions[i3 + 1] = spherePositions[i3 + 1];
-            positions[i3 + 2] = spherePositions[i3 + 2];
+            // Dummy positions (will be overridden by shader)
+            particlePositions[i3] = 0;
+            particlePositions[i3 + 1] = 0;
+            particlePositions[i3 + 2] = 0;
             
-            // Original positions
-            originalPositions[i3] = spherePositions[i3];
-            originalPositions[i3 + 1] = spherePositions[i3 + 1];
-            originalPositions[i3 + 2] = spherePositions[i3 + 2];
+            // Texture coordinates for sampling position texture
+            const x = (i % textureSize) / textureSize;
+            const y = Math.floor(i / textureSize) / textureSize;
+            textureIndices[i2] = x;
+            textureIndices[i2 + 1] = y;
         }
         
-        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        particleGeometry.setAttribute('originalPosition', new THREE.BufferAttribute(originalPositions, 3));
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        particleGeometry.setAttribute('textureIndex', new THREE.BufferAttribute(textureIndices, 2));
 
-        // Setup shader uniforms
-        shaderUniforms = {
+        // Setup compute material for position updates
+        const computeUniforms = {
+            positionTexture: { value: positionTexture1 },
+            originalPositionTexture: { value: originalPositionTexture },
             time: { value: 0 },
-            convergenceProgress: { value: 1 },
-            radius: { value: radius },
+            deltaTime: { value: 0 },
             animationMode: { value: animationStateRef.current.animationMode },
             dimensions: { value: new THREE.Vector2(width, height) },
-            noiseScale: { value: 0.1 },
-            flowSpeed: { value: 2.0 },
+            flowSpeed: { value: 0.5 },
+            noiseScale: { value: 0.7 },
+            convergenceProgress: { value: 1 },
             flowfieldStartTime: { value: -1 }
+        };
+
+        computeMaterial = new THREE.ShaderMaterial({
+            uniforms: computeUniforms,
+            vertexShader: positionComputeVertexShader,
+            fragmentShader: positionComputeFragmentShader
+        });
+
+        // Create compute scene and camera
+        computeScene = new THREE.Scene();
+        computeCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        
+        // Create fullscreen quad for compute
+        const computeGeometry = new THREE.PlaneGeometry(2, 2);
+        const computeMesh = new THREE.Mesh(computeGeometry, computeMaterial);
+        computeScene.add(computeMesh);
+
+        // Setup particle render uniforms
+        shaderUniforms = {
+            positionTexture: { value: positionTexture1 },
+            time: { value: 0 },
+            textureSize: { value: new THREE.Vector2(textureSize, textureSize) }
         };
 
         // Create shader material
@@ -151,11 +242,7 @@ function CanvasBuilder({activeButtonId}) {
 
         // Animation loop        
         const animate = () => {
-            setTimeout( function() {
-
-                requestAnimationFrame( animate );
-
-            }, 1000 / 60 );
+            requestAnimationFrame(animate); 
             
             const deltaTime = clock.getDelta();
             const elapsedTime = clock.getElapsedTime();
@@ -166,26 +253,52 @@ function CanvasBuilder({activeButtonId}) {
                 const convergenceTime = performance.now() - animState.convergenceStartTime;
                 const convergenceProgress = Math.min(convergenceTime / convergenceDuration, 1.0);
                 
-                shaderUniforms.convergenceProgress.value = convergenceProgress;
+                computeMaterial.uniforms.convergenceProgress.value = convergenceProgress;
                 // Switch to rotating sphere when convergence is complete
                 if (convergenceProgress >= 1.0) {
                     animState.animationMode = 2;
                 }
             }
             
-            
-            // Update shader uniforms
-            shaderUniforms.time.value = elapsedTime;
-            shaderUniforms.animationMode.value = animState.animationMode;
-            
             // Handle flowfield start time synchronization
             if (animState.animationMode === 0 && animState.flowfieldStartTime === -1) {
                 // If we just switched to flowfield mode but start time isn't set, set it now
-                animState.flowfieldStartTime = elapsedTime;
+                animState.flowfieldStartTime = performance.now() * 0.001; // Use actual time
             }
-            shaderUniforms.flowfieldStartTime.value = animState.flowfieldStartTime;
+
+            // Update compute shader uniforms
+            const actualTime = performance.now() * 0.001; // Convert milliseconds to seconds
+            computeMaterial.uniforms.time.value = actualTime;
+            computeMaterial.uniforms.deltaTime.value = deltaTime;
+            computeMaterial.uniforms.animationMode.value = animState.animationMode;
+            computeMaterial.uniforms.flowfieldStartTime.value = animState.flowfieldStartTime;
+            
+            // Ping-pong: read from current texture, write to other
+            const inputTexture = currentTexture === 0 ? positionTexture1 : positionTexture2;
+            const outputTarget = currentTexture === 0 ? renderTarget2 : renderTarget1;
+            
+            // Update position texture input
+            computeMaterial.uniforms.positionTexture.value = inputTexture;
+            
+            // Render compute shader to update positions
+            renderer.setRenderTarget(outputTarget);
+            renderer.render(computeScene, computeCamera);
+            
+            // Update particle material to use new positions
+            const outputTexture = currentTexture === 0 ? renderTarget2.texture : renderTarget1.texture;
+            shaderUniforms.positionTexture.value = outputTexture;
+            
+            // Swap textures for next frame
+            if (currentTexture === 0) {
+                positionTexture2 = outputTexture;
+                currentTexture = 1;
+            } else {
+                positionTexture1 = outputTexture;
+                currentTexture = 0;
+            }
             
             // Render particles to screen
+            renderer.setRenderTarget(null);
             renderer.render(scene, camera);
         };
         animate();
@@ -199,9 +312,9 @@ function CanvasBuilder({activeButtonId}) {
             width = height * camera.aspect;
             dimensionsRef.current = { width, height };
             
-            // Update shader uniforms
-            if (shaderUniforms) {
-                shaderUniforms.dimensions.value.set(width, height);
+            // Update compute shader uniforms
+            if (computeMaterial) {
+                computeMaterial.uniforms.dimensions.value.set(width, height);
             }
         };
         window.addEventListener('resize', onWindowResize);
@@ -212,6 +325,12 @@ function CanvasBuilder({activeButtonId}) {
             renderer.dispose();
             if (particleGeometry) particleGeometry.dispose();
             if (particleMaterial) particleMaterial.dispose();
+            if (computeMaterial) computeMaterial.dispose();
+            if (renderTarget1) renderTarget1.dispose();
+            if (renderTarget2) renderTarget2.dispose();
+            if (positionTexture1) positionTexture1.dispose();
+            if (positionTexture2) positionTexture2.dispose();
+            if (originalPositionTexture) originalPositionTexture.dispose();
         };
     }, []);
 
