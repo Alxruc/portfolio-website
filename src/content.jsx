@@ -96,13 +96,14 @@ function ContentBuilder() {
                 <div className="contact-card">
                     <h1>Contact Me</h1>
                     <h2 className="item">
-                        E-Mail: ruchtialex@gmail.com
+                        
                     </h2>
                 </div>
             </div>
 
             {/* Canvas */}
             <CanvasBuilder activeButtonId={activeButtonId}/>
+
             <div className="bottom-navigation">
                 {buttons.map((button) => (
                     <button

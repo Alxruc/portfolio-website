@@ -62,7 +62,6 @@ function CanvasBuilder({activeButtonId}) {
     const dimensionsRef = useRef({ width: 0, height: 0 });
 
     useEffect(() => { // basically our init
-        console.log("init")
         const canvas = canvasRef.current;
 
         // Renderer using React-managed canvas

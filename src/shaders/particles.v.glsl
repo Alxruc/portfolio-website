@@ -6,9 +6,8 @@ uniform float time;
 uniform vec2 textureSize; // Size of the position texture
 
 // Custom attributes
-attribute vec2 textureIndex; // UV coordinates to sample from position texture
+attribute vec2 textureIndex; 
 
-// Varying to pass to fragment shader
 varying vec3 vPosition;
 
 void main() {

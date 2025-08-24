@@ -10,22 +10,29 @@ function ProjectsBuilder() {
             logos: ["github.svg"],
             links:  ["https://github.com/Alxruc/guess-the-song"]
         },
+        {
+            id: 'card2',
+            title: '3D Website: Portfolio',
+            content: 'This very website uses a custom GPU compute shader inside Three.js to render the background particle system efficiently. The main job of the shader being the flowing effect you are currently seeing.',
+            logos: ["github.svg"],
+            links: ["https://github.com/Alxruc/portfolio-website"]
+        },
         { 
-            id: 'card2', 
+            id: 'card3', 
             title: 'Bachelorthesis: Natural Neighbor Splines', 
             content: 'The testing of a novel interpolation method, combining the idea of B-splines with the Natural Neighbor interpolation to potentially generate smooth surfaces. The project was written in C++ using the geometry library CGAL for structures like the Voronoi diagram and Delaunay triangulation',
             logos: [],
             links: [] 
         },
         { 
-            id: 'card3',
+            id: 'card4',
             title: 'Game: 3-PARTITION Tetris', 
             content: 'A tetris clone written in C++ using the graphics library SDL2 to visualize the idea and proof of the hardness of the Tetris clone by turning 3-partition problems into Tetris levels. Inspired by the paper "Tetris is Hard, Even to Approximate" by Breukelaar et al.',
             logos: ["github.svg"],
             links: ["https://github.com/Alxruc/3partition-tetris"]
         },
         {
-            id: 'card4',
+            id: 'card5',
             title: 'Browser Extension: Japanese Word of the Day',
             content: 'A simple browser extension designed to aid language learning, by giving the user a random Japanese word every day along with its reading and dictionary entry.',
             logos: ["github.svg", "simple-firefox.svg"],
@@ -84,15 +91,16 @@ function ProjectsBuilder() {
                         
                     </div>
                 ))}
-                <div className="project-navigation">
+                
+            </div>
+            <div className="project-navigation">
                     <button className="previous" onClick={handlePrevious}>
-                        Previous
+                        &lt;
                     </button>
                     <button className="next" onClick={handleNext}>
-                        Next
+                        &gt;
                     </button>
                 </div>
-            </div>
         </>
     )
 }
