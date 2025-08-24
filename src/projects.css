@@ -100,41 +100,50 @@
 
 @media (max-width: 768px) {
     .projects-carousel {
-        padding-bottom: 110px; 
+        padding-bottom: 140px; /* Increase bottom padding for more space */
     }
     
     .project-card {
-        min-height: clamp(200px, calc(100vh - 150px), 400px);
-        max-height: calc(100vh - 150px);
+        min-height: clamp(200px, calc(100vh - 180px), 400px);
+        max-height: calc(100vh - 180px);
         width: 90vw;
     }
     
     .project-navigation {
-        bottom: 80px; 
+        bottom: 110px; /* Increase gap from bottom navigation */
         gap: 15px;
     }
 }
 
 @media (max-height: 600px) {
     .projects-carousel {
-        padding-bottom: 100px;
+        padding-bottom: 120px; /* Increase for short screens */
     }
     
     .project-card {
-        min-height: clamp(150px, calc(100vh - 120px), 300px);
-        max-height: calc(100vh - 120px);
+        min-height: clamp(150px, calc(100vh - 140px), 300px);
+        max-height: calc(100vh - 140px);
         width: clamp(250px, 50vw, 500px);
     }
     
     .project-navigation {
-        bottom: 70px;
+        bottom: 90px; /* More gap even on short screens */
     }
 }
 
 @media (max-width: 480px) {
+    .projects-carousel {
+        padding-bottom: 150px; /* Extra space on very small screens */
+    }
+    
     .project-card {
         padding: 12px;
-        min-height: clamp(180px, calc(100vh - 130px), 350px);
+        min-height: clamp(180px, calc(100vh - 170px), 350px);
+        max-height: calc(100vh - 170px);
+    }
+    
+    .project-navigation {
+        bottom: 120px; /* Ensure good gap on small phones */
     }
     
     .project-navigation button {

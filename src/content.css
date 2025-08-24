@@ -17,8 +17,22 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  width: 100%;
+  overflow: hidden; /* Prevent scrolling */
   color: white;
-  font-size: large;  
+  font-size: large;
+  /* Prevent pull-to-refresh and overscroll */
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative; /* Changed from fixed to relative for proper positioning context */
+  top: 0;
+  left: 0;
 }
 
 canvas {
@@ -33,8 +47,9 @@ canvas {
 
 
 .bottom-navigation {
-    position: absolute;
-    bottom: 40px;
+  display: flex;
+    position: fixed;
+    bottom: max(40px, env(safe-area-inset-bottom, 40px));
     left: 0;
     right: 0;
     display: flex;
@@ -115,7 +130,7 @@ canvas {
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: 1fr; /* Force equal row heights */
   position: absolute;
-  top: 10%;
+  top: 30%;
   left: 50%;
   transform: translateX(-50%);
   gap: clamp(16px, 4vw, 40px);
@@ -126,7 +141,6 @@ canvas {
   max-height: calc(100vh - 160px);
   width: min(95vw, 1200px);
   padding-bottom: 120px;
-  overflow-y: auto;
 }
 
 
@@ -167,6 +181,7 @@ canvas {
 }
 
 .projects-section {
+  display: flex;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -176,6 +191,7 @@ canvas {
 }
 
 .contact-section {
+  display: flex;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -231,9 +247,10 @@ canvas {
   }
   
   .bottom-navigation {
-    bottom: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom, 20px));
     padding: 0 10px;
     height: 50px;
+    position: fixed; /* Ensure it stays fixed on mobile too */
   }
   
   .nav-button {

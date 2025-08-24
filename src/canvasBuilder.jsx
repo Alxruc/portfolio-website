@@ -61,16 +61,31 @@ function CanvasBuilder({activeButtonId}) {
     });
     const dimensionsRef = useRef({ width: 0, height: 0 });
 
+    const isPortraitMode = () => {
+        return window.innerHeight > window.innerWidth;
+    };
+
+    // Get proper viewport dimensions (especially important for mobile)
+    const getViewportDimensions = () => {
+        return {
+            width: Math.min(window.innerWidth, document.documentElement.clientWidth),
+            height: Math.min(window.innerHeight, document.documentElement.clientHeight)
+        };
+    };
+
     useEffect(() => { // basically our init
         const canvas = canvasRef.current;
+
+        // Get proper viewport dimensions
+        const { width: viewportWidth, height: viewportHeight } = getViewportDimensions();
 
         // Renderer using React-managed canvas
         renderer = new THREE.WebGLRenderer({
             canvas: canvas,
             antialias: true,
         });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(viewportWidth, viewportHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
 
         // Check for float texture support
         const gl = renderer.getContext();
@@ -84,10 +99,10 @@ function CanvasBuilder({activeButtonId}) {
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050505); // Dark background
 
-        let fov = 70;
+        let fov = isPortraitMode() ? 80 : 70; // Wider FOV for portrait
         camera = new THREE.PerspectiveCamera(
             fov,
-            window.innerWidth / window.innerHeight,
+            viewportWidth / viewportHeight,
             0.1,
             100
         );
@@ -223,7 +238,8 @@ function CanvasBuilder({activeButtonId}) {
         shaderUniforms = {
             positionTexture: { value: positionTexture1 },
             time: { value: 0 },
-            textureSize: { value: new THREE.Vector2(textureSize, textureSize) }
+            textureSize: { value: new THREE.Vector2(textureSize, textureSize) },
+            pointSize: { value: 1.0 }
         };
 
         // Create shader material
@@ -303,10 +319,14 @@ function CanvasBuilder({activeButtonId}) {
         animate();
 
         const onWindowResize = () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
+            const { width: viewportWidth, height: viewportHeight } = getViewportDimensions();
+            
+            camera.aspect = viewportWidth / viewportHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            let fovRad = fov / 360 * 2 * Math.PI;
+            renderer.setSize(viewportWidth, viewportHeight);
+            const newFov = isPortraitMode() ? 80 : 70;
+            camera.fov = newFov;
+            let fovRad = newFov / 360 * 2 * Math.PI;
             height = 2 * Math.tan(fovRad / 2) * camera.position.z;
             width = height * camera.aspect;
             dimensionsRef.current = { width, height };
@@ -314,6 +334,10 @@ function CanvasBuilder({activeButtonId}) {
             // Update compute shader uniforms
             if (computeMaterial) {
                 computeMaterial.uniforms.dimensions.value.set(width, height);
+            }
+
+            if (shaderUniforms) {
+                shaderUniforms.pointSize.value = isPortraitMode() ? 1.5 : 1.0;
             }
         };
         window.addEventListener('resize', onWindowResize);

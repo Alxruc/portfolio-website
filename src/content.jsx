@@ -96,7 +96,7 @@ function ContentBuilder() {
                 <div className="contact-card">
                     <h1>Contact Me</h1>
                     <h2 className="item">
-                        
+                        Email: alex@ruchti.dev
                     </h2>
                 </div>
             </div>

@@ -33,7 +33,7 @@ float noise(in vec3 x) {
 }
 
 vec3 rotatePosition(vec3 pos) {
-    float rotationSpeed = 0.01;
+    float rotationSpeed = 0.05;
     float angle = time * rotationSpeed;
     
     vec3 rotatedPos = pos;

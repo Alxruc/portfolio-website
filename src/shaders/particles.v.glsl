@@ -4,6 +4,7 @@ precision highp float;
 uniform sampler2D positionTexture; // Ping-pong texture containing current positions
 uniform float time;
 uniform vec2 textureSize; // Size of the position texture
+uniform float pointSize;
 
 // Custom attributes
 attribute vec2 textureIndex; 
@@ -28,5 +29,5 @@ void main() {
 
     vPosition = worldPosition;
     gl_Position = clipPosition;
-    gl_PointSize = 1.0;
+    gl_PointSize = pointSize;
 }
