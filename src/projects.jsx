@@ -1,5 +1,7 @@
 import './projects.css';
 import { useState } from 'react';
+import githubIcon from "./assets/github.svg"
+import firefoxIcon from "./assets/simple-firefox.svg"
 
 function ProjectsBuilder() {
     const projects = [
@@ -7,14 +9,14 @@ function ProjectsBuilder() {
             id: 'card1', 
             title: 'Full-Stack Web Application: Guess The Song', 
             content: 'Leveraging a React frontend and a simple Express server backend, this web application allows multiple players to participate in a party game, where they compete to see whose song knowledge is the best. It uses the Spotify API so that the host can input songs or even playlist directly from Spotify.',
-            logos: ["github.svg"],
+            logos: [githubIcon],
             links:  ["https://github.com/Alxruc/guess-the-song"]
         },
         {
             id: 'card2',
             title: '3D Website: Portfolio',
             content: 'This very website uses a custom GPU compute shader inside Three.js to render the background particle system efficiently. The main job of the shader being the flowing effect you are currently seeing.',
-            logos: ["github.svg"],
+            logos: [githubIcon],
             links: ["https://github.com/Alxruc/portfolio-website"]
         },
         { 
@@ -28,14 +30,14 @@ function ProjectsBuilder() {
             id: 'card4',
             title: 'Game: 3-PARTITION Tetris', 
             content: 'A tetris clone written in C++ using the graphics library SDL2 to visualize the idea and proof of the hardness of the Tetris clone by turning 3-partition problems into Tetris levels. Inspired by the paper "Tetris is Hard, Even to Approximate" by Breukelaar et al.',
-            logos: ["github.svg"],
+            logos: [githubIcon],
             links: ["https://github.com/Alxruc/3partition-tetris"]
         },
         {
             id: 'card5',
             title: 'Browser Extension: Japanese Word of the Day',
             content: 'A simple browser extension designed to aid language learning, by giving the user a random Japanese word every day along with its reading and dictionary entry.',
-            logos: ["github.svg", "simple-firefox.svg"],
+            logos: [githubIcon, firefoxIcon],
             links: ["https://github.com/Alxruc/japanese-wotd", "https://addons.mozilla.org/en-US/firefox/addon/japanese-wotd/"]
         }
     ];
@@ -83,7 +85,7 @@ function ProjectsBuilder() {
                             <div className="project-links">
                                 {project.links.map((link, linkIndex) => (
                                     <a key={linkIndex} href={link} target="_blank" rel="noopener noreferrer">
-                                        <img src={`src/assets/${project.logos[linkIndex]}`} alt="project logo" />
+                                        <img src={project.logos[linkIndex]} alt="project logo" />
                                     </a>
                                 ))}
                             </div>
