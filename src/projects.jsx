@@ -1,7 +1,7 @@
 import './projects.css';
 import { useState } from 'react';
-import githubIcon from "./assets/github.svg"
-import firefoxIcon from "./assets/simple-firefox.svg"
+import githubIcon from "/github.svg"
+import firefoxIcon from "/simple-firefox.svg"
 
 function ProjectsBuilder() {
     const projects = [
