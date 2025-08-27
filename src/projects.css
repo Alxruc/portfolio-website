@@ -17,7 +17,7 @@
     border: 1px solid grey;
     border-radius: 12px;
     padding: clamp(16px, 3vw, 24px);
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(3px);
     transition: all 0.8s ease-out;
     text-align: center;
     display: flex;
@@ -30,7 +30,7 @@
     max-height: calc(100vh - 200px);
     aspect-ratio: 0.8;
     position: absolute;
-    top: 50%;
+    top: 45%;
     left: 50%;
     overflow-y: auto; /* Make scrollable if content overflows */
     z-index: 1;
@@ -39,19 +39,19 @@
 .visible-card {
     opacity: 1;
     visibility: visible;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -55%);
 }
 
 .hidden-card-left {
     opacity: 0;
     visibility: hidden;
-    transform: translate(-150%, -50%);
+    transform: translate(-150%, -55%);
 }
 
 .hidden-card-right {
     opacity: 0;
     visibility: hidden;
-    transform: translate(50%, -50%);
+    transform: translate(50%, -55%);
 }
 
 .project-navigation {

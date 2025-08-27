@@ -1,9 +1,7 @@
 import "./content.css";
 import CanvasBuilder from './canvasBuilder.jsx';
 import ProjectsBuilder from "./projects.jsx";
-import { useEffect, useRef, createContext, useContext, useState } from 'react';
-
-// Create a context to share scroll state with the canvas
+import { useState } from 'react';
 
 function ContentBuilder() {
     const [activeButtonId, setActiveButtonId] = useState('home');
@@ -16,12 +14,8 @@ function ContentBuilder() {
     ];
 
     const handleButtonClick = (buttonId) => {
-        console.log(`Button clicked: ${buttonId}`);
         setActiveButtonId(buttonId)
     };
-
-    
-
 
     return (            
         <div>
@@ -53,13 +47,13 @@ function ContentBuilder() {
                         </div>
                     </div>                    
                 </div>
-                <div class="card">
+                <div className="card">
                     <h2> Technologies </h2>
                     <div className="card-content">
                         <span className="list-title">Languages</span>
                         <div className="item">
                             <div>
-                                <strong>Primary:</strong> C++, JavaScript, Python,
+                                <strong>Primary:</strong> C++, JavaScript, Python
                             </div>
                             <div>
                                 <strong>Secondary:</strong> Java, C, C#

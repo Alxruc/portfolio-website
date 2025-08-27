@@ -13,6 +13,9 @@ uniform float flowfieldStartTime;
 
 varying vec2 vUv;
 
+/*
+    Hash and Noise functions originally made by Inigo Quilez https://iquilezles.org/
+*/
 float hash(float n) {
     return fract(sin(n) * 43758.5453);
 }
@@ -44,19 +47,13 @@ vec3 rotatePosition(vec3 pos) {
 }
 
 vec3 updateFlowfieldPosition(vec3 currentPos, vec3 originalPos) {
-    float flowfieldTime = time - flowfieldStartTime;
-    
-    if (flowfieldTime < 0.0) {
-        return originalPos;
-    }
-    
+  
     
     // Sample noise at current position
     vec3 noisePos = currentPos * noiseScale;
-    vec3 t = vec3(time,time,time) * 0.1;
     
     // Get flowfield angle
-    float angle = noise(noisePos + t) * 6.28318530718;
+    float angle = noise(noisePos) * 6.28318530718;
     
     
     // Calculate velocity

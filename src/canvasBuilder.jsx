@@ -16,7 +16,9 @@ let renderTarget1, renderTarget2;
 let computeMaterial, computeScene, computeCamera;
 let currentTexture = 0; // 0 or 1 for ping-pong
 
-const convergenceDuration = 500
+const convergenceDuration = 500;
+const flowSpeed = 0.3; // how fast the particles of the flowfield are moving
+const noiseScale = 2.1; // how "zoomed in" the noise texture is, higher value leads to more intricate patterns
 
 function changeSceneVisibility(changedId, animationStateRef) {
     const animState = animationStateRef.current;
@@ -32,8 +34,6 @@ function changeSceneVisibility(changedId, animationStateRef) {
                 animState.animationMode = 2; // direct to rotating sphere
                 animState.targetMode = 2;
             }
-            // Reset flowfield for next time
-            animState.flowfieldStartTime = -1; // Will be set when flowfield starts again
             break;
         case "about":
         case "projects":
@@ -41,8 +41,6 @@ function changeSceneVisibility(changedId, animationStateRef) {
             if (animState.animationMode != 0) {
                 animState.animationMode = 0; // flowfield
                 animState.targetMode = 0;
-                // Mark that flowfield start time needs to be set (will be set in animation loop)
-                animState.flowfieldStartTime = -1;
             }
             break;
     }
@@ -57,7 +55,6 @@ function CanvasBuilder({activeButtonId}) {
         animationMode: 2, // 0 = flowfield, 1 = converge, 2 = rotating sphere
         targetMode: 2, // Final target mode after transitions
         convergenceStartTime: 0,
-        flowfieldStartTime: -1 // Will be set when flowfield starts
     });
     const dimensionsRef = useRef({ width: 0, height: 0 });
 
@@ -85,14 +82,7 @@ function CanvasBuilder({activeButtonId}) {
             antialias: true,
         });
         renderer.setSize(viewportWidth, viewportHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
-
-        // Check for float texture support
-        const gl = renderer.getContext();
-        const floatExtension = gl.getExtension('OES_texture_float') || gl.getExtension('WEBGL_color_buffer_float');
-        if (!floatExtension) {
-            console.warn('Float textures not supported, falling back to half float');
-        }
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
         clock = new THREE.Clock();
 
@@ -213,10 +203,9 @@ function CanvasBuilder({activeButtonId}) {
             deltaTime: { value: 0 },
             animationMode: { value: animationStateRef.current.animationMode },
             dimensions: { value: new THREE.Vector2(width, height) },
-            flowSpeed: { value: 0.5 },
-            noiseScale: { value: 0.7 },
+            flowSpeed: { value: flowSpeed },
+            noiseScale: { value: noiseScale },
             convergenceProgress: { value: 1 },
-            flowfieldStartTime: { value: -1 }
         };
 
         computeMaterial = new THREE.ShaderMaterial({
@@ -274,19 +263,13 @@ function CanvasBuilder({activeButtonId}) {
                     animState.animationMode = 2;
                 }
             }
-            
-            // Handle flowfield start time synchronization
-            if (animState.animationMode === 0 && animState.flowfieldStartTime === -1) {
-                // If we just switched to flowfield mode but start time isn't set, set it now
-                animState.flowfieldStartTime = performance.now() * 0.001; // Use actual time
-            }
+        
 
             // Update compute shader uniforms
             const actualTime = performance.now() * 0.001; // Convert milliseconds to seconds
             computeMaterial.uniforms.time.value = actualTime;
             computeMaterial.uniforms.deltaTime.value = deltaTime;
             computeMaterial.uniforms.animationMode.value = animState.animationMode;
-            computeMaterial.uniforms.flowfieldStartTime.value = animState.flowfieldStartTime;
             
             // Ping-pong: read from current texture, write to other
             const inputTexture = currentTexture === 0 ? positionTexture1 : positionTexture2;
