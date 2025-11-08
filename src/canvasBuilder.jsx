@@ -18,7 +18,7 @@ let currentTexture = 0; // 0 or 1 for ping-pong
 
 const convergenceDuration = 500;
 const flowSpeed = 0.3; // how fast the particles of the flowfield are moving
-const noiseScale = 2.1; // how "zoomed in" the noise texture is, higher value leads to more intricate patterns
+const noiseScale = 1.8; // how "zoomed in" the noise texture is, higher value leads to more intricate patterns
 
 function changeSceneVisibility(changedId, animationStateRef) {
     const animState = animationStateRef.current;
@@ -228,7 +228,7 @@ function CanvasBuilder({activeButtonId}) {
             positionTexture: { value: positionTexture1 },
             time: { value: 0 },
             textureSize: { value: new THREE.Vector2(textureSize, textureSize) },
-            pointSize: { value: 1.0 }
+            pointSize: { value: Math.min(width, height) * 0.001 }
         };
 
         // Create shader material
@@ -317,10 +317,6 @@ function CanvasBuilder({activeButtonId}) {
             // Update compute shader uniforms
             if (computeMaterial) {
                 computeMaterial.uniforms.dimensions.value.set(width, height);
-            }
-
-            if (shaderUniforms) {
-                shaderUniforms.pointSize.value = isPortraitMode() ? 1.5 : 1.0;
             }
         };
         window.addEventListener('resize', onWindowResize);

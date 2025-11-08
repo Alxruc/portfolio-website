@@ -13,11 +13,12 @@ uniform float flowfieldStartTime;
 
 varying vec2 vUv;
 
-/*
-    Hash and Noise functions originally made by Inigo Quilez https://iquilezles.org/
-*/
+
 float hash(float n) {
-    return fract(sin(n) * 43758.5453);
+    n = fract(n * 0.1031);
+    n *= n + 33.33;
+    n *= n + n;
+    return fract(n);
 }
 
 float noise(in vec3 x) {
