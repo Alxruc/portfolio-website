@@ -22,11 +22,11 @@ function ContentBuilder() {
             {/* Home Tab */}
             <div className={`name-display ${activeButtonId === 'home' ? 'visible' : 'hidden'}`}>
                 <div className="firstname">
-                    Alexander Ruchti
+                    
                     <div className="gradient-line"></div>
                 </div>
                 <div className="lastname">
-                    Software Engineering
+                  
                     <div className="gradient-line-back"></div>
                 </div>
 
