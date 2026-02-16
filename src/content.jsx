@@ -23,11 +23,9 @@ function ContentBuilder() {
             <div className={`name-display ${activeButtonId === 'home' ? 'visible' : 'hidden'}`}>
                 <div className="firstname">
                     
-                    <div className="gradient-line"></div>
                 </div>
                 <div className="lastname">
                   
-                    <div className="gradient-line-back"></div>
                 </div>
 
             </div>

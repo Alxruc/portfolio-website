@@ -2,21 +2,18 @@ precision highp float;
 
 uniform vec2 u_resolution;
 uniform float u_time;
+uniform sampler2D u_envmap;
 
 varying vec3 vPosition;
 varying vec2 vUv;
 
 const int normalIterations = 10;
 const int distIterations = 256;
-const int rayMarches = 80;
-const float MAX_DIST = 300.0;
+const int rayMarches = 50;
+ 
+const float shininess   = 200.0;
 
-const vec3 lightColor = vec3(1.0, 1.0, 1.0);
-const float lightPower = 40.0;
-const vec3 ambientColor = vec3(0.2, 0.5, 0.4);
-const vec3 diffuseColor = vec3(0.3,0.7,0.7);
-const vec3 specColor = vec3(1.0, 1.0, 1.0);
-const float shininess = 12.0;
+#define PI 3.14159265358979
 
 // multiply 2 quaternions
 vec4 qMult(vec4 q1, vec4 q2) {
@@ -89,36 +86,40 @@ float map(vec3 p, vec4 c_julia) {
     return calcDistance(vec4(p, 0.0), c_julia);
 }
 
-vec3 calculate_color(vec3 p, vec3 normal, vec3 lightPos) {
-    vec3 lightDir = lightPos - p;
-    float dist = dot(lightDir, lightDir);
-    lightDir = normalize(lightDir);
+float calculate_spec(vec3 p, vec3 normal, vec3 lightPos) {
+    vec3 lightDir = normalize(lightPos - p);
+    vec3 viewDir = normalize(-p);
+    vec3 halfDir = normalize(lightDir + viewDir);
+    float specAngle = max(dot(halfDir, normal), 0.0);
+    float specular = pow(specAngle, shininess);
 
-    float lambertian = max(dot(lightDir, normal), 0.0);
-    float specular = 0.0;
+    return specular;
+}
 
-    if (lambertian > 0.0) {
-
-        vec3 viewDir = normalize(-p);
-
-        // this is blinn phong
-        vec3 halfDir = normalize(lightDir + viewDir);
-        float specAngle = max(dot(halfDir, normal), 0.0);
-        specular = pow(specAngle, shininess);
-    }
-    vec3 colorLinear = ambientColor +
-                    diffuseColor * lambertian * lightColor * lightPower / dist +
-                    specColor * specular * lightColor * lightPower / dist;
-
-    return colorLinear;
-
+vec2 getEnvUV(vec3 dir) {
+    vec2 uvOut;
+    uvOut.x = (PI + atan(dir.z, dir.x)) / (2.0 * PI);
+    uvOut.y = 1.0 - (atan(sqrt(dir.x * dir.x + dir.z * dir.z), dir.y)) / PI;
+    return uvOut;
 }
 
 
 void main() {
     vec2 uv = (vUv - 0.5) * 2.0;
-    uv.x *= u_resolution.x / u_resolution.y;
+    float aspect = u_resolution.x / u_resolution.y;
+    uv.x *= aspect;
+    float fractalSize = 3.5; 
+    float visibleWidth = 2.0 * aspect;
 
+    // If the screen is narrower than the fractal, calculate a zoom factor
+    // to shrink the world until it fits
+    float zoom = max(1.0, fractalSize / visibleWidth);
+    
+    // Apply the zoom
+    uv *= zoom;
+    // We shift the coordinate system to the right, which moves the object left
+    float shiftAmount = (visibleWidth * zoom) * 0.25;
+    uv.x += shiftAmount;
     
     float time = u_time * 0.4;
     float r = 2.; // Distance to fractal object
@@ -130,7 +131,7 @@ void main() {
     );
 
     vec3 lightPos = vec3(
-        3. + cos(time),
+        3.,
         0.,
         5.
     );
@@ -144,17 +145,31 @@ void main() {
     // ray direction
     vec3 rd = normalize(uv.x * right + uv.y * up + 2.0 * fwd);
 
-    vec3 col = vec3(0.0);
     float t = 0.0;
     vec3 p;
-    vec4 c_julia = 0.35*cos(time*vec4(0.2,1.7,1.1,2.5) ) - vec4(0.0,-0.7,0.0,0.0);
+    vec4 c_julia = 0.25*cos(time*vec4(0.2,1.7,1.1,2.5) ) - vec4(0.0,-0.7,0.0,0.0);
+
+    // mapping env map uvs
+    vec2 uvOut = getEnvUV(rd);
+
+    vec3 col = texture(u_envmap, uvOut).rgb;
 
     for (int i = 0; i < rayMarches; i++) {
         p = ro + rd * t;
         float d = map(p, c_julia);
         if (d < 0.001) {
             vec3 normal = calcNormal(p, c_julia);
-            col = calculate_color(p, normal, lightPos);
+            vec3 ref = reflect(rd, normal);
+            vec3 reflectionColor = texture2D(u_envmap, getEnvUV(ref)).rgb;
+            vec3 metalTint = vec3(0.9, 0.95, 1.0); // Chrome tint
+            col = reflectionColor * metalTint;
+            float specular = calculate_spec(p, normal, lightPos);
+            // Add the bright white sun highlight on top
+            col += vec3(1.0) * specular * 1.0; 
+
+            // Makes edges slightly brighter/more reflective
+            float fresnel = pow(1.0 + dot(rd, normal), 3.0);
+            col = mix(col, vec3(1.0), fresnel * 0.5);
             break;
         }
         t += d;
