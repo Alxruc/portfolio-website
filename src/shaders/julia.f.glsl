@@ -9,8 +9,14 @@ varying vec2 vUv;
 const int normalIterations = 10;
 const int distIterations = 256;
 const int rayMarches = 80;
+const float MAX_DIST = 300.0;
 
-
+const vec3 lightColor = vec3(1.0, 1.0, 1.0);
+const float lightPower = 40.0;
+const vec3 ambientColor = vec3(0.2, 0.5, 0.4);
+const vec3 diffuseColor = vec3(0.3,0.7,0.7);
+const vec3 specColor = vec3(1.0, 1.0, 1.0);
+const float shininess = 12.0;
 
 // multiply 2 quaternions
 vec4 qMult(vec4 q1, vec4 q2) {
@@ -83,6 +89,31 @@ float map(vec3 p, vec4 c_julia) {
     return calcDistance(vec4(p, 0.0), c_julia);
 }
 
+vec3 calculate_color(vec3 p, vec3 normal, vec3 lightPos) {
+    vec3 lightDir = lightPos - p;
+    float dist = dot(lightDir, lightDir);
+    lightDir = normalize(lightDir);
+
+    float lambertian = max(dot(lightDir, normal), 0.0);
+    float specular = 0.0;
+
+    if (lambertian > 0.0) {
+
+        vec3 viewDir = normalize(-p);
+
+        // this is blinn phong
+        vec3 halfDir = normalize(lightDir + viewDir);
+        float specAngle = max(dot(halfDir, normal), 0.0);
+        specular = pow(specAngle, shininess);
+    }
+    vec3 colorLinear = ambientColor +
+                    diffuseColor * lambertian * lightColor * lightPower / dist +
+                    specColor * specular * lightColor * lightPower / dist;
+
+    return colorLinear;
+
+}
+
 
 void main() {
     vec2 uv = (vUv - 0.5) * 2.0;
@@ -90,12 +121,18 @@ void main() {
 
     
     float time = u_time * 0.4;
-    float r = 3.; // Distance to fractal object
+    float r = 2.; // Distance to fractal object
     
     vec3 ro = vec3(
-        r * cos(time),          // Rotate on X
+        r,          // Rotate on X
         3.,
-        r * sin(time)           // Rotate on Z
+        r          // Rotate on Z
+    );
+
+    vec3 lightPos = vec3(
+        3. + cos(time),
+        0.,
+        5.
     );
     // This ensures the camera always points at the center (0,0,0)
     vec3 ta = vec3(0.0, 0.0, 0.0); // Target
@@ -110,14 +147,14 @@ void main() {
     vec3 col = vec3(0.0);
     float t = 0.0;
     vec3 p;
-    vec4 c_julia = 0.45*cos(time*vec4(0.2,1.7,1.1,2.5) ) - vec4(0.0,-0.7,0.0,0.0);
+    vec4 c_julia = 0.35*cos(time*vec4(0.2,1.7,1.1,2.5) ) - vec4(0.0,-0.7,0.0,0.0);
 
     for (int i = 0; i < rayMarches; i++) {
         p = ro + rd * t;
         float d = map(p, c_julia);
         if (d < 0.001) {
-            col = vec3(0.74,0.76,0.79);
-            col *= 1.0 - float(i) / float(rayMarches);
+            vec3 normal = calcNormal(p, c_julia);
+            col = calculate_color(p, normal, lightPos);
             break;
         }
         t += d;
