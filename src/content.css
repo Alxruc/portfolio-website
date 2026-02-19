@@ -1,16 +1,11 @@
-@import url('https://fonts.googleapis.com/css?family=Oswald');
-
-@font-face {
-  font-family: "Space Grotesk";
-  src: url(./fonts/SpaceGrotesk.ttf);
-}
-
+@import url('https://fonts.googleapis.com/css?family=Quicksand:wght@300..700&display=swap');
 
 
 :root {
     --light: #f4f4f4;
     --card-background: #030303de;
     --button-background: rgba(7, 7, 7, 0.2);
+    font-family: "Quicksand", sans-serif;
 }
 
 html, body {
@@ -113,308 +108,31 @@ canvas {
 }
 
 .name-display {
-  position: relative;
-  width: 100vw;
+  display: flex;
   height: 100vh;
-  display: flex;
   flex-direction: column;
-  pointer-events: none;
-  z-index: 5;
-}
-
-.firstname {
-  position: absolute;
-  top: 15%;
-  left: 15%;
-  font-size: clamp(32px, 8vw, 70pt);
-  font-weight: bold;
-  font-style: italic;
-  font-family: "Oswald", sans-serif;
-}
-
-.lastname {
-  position: absolute;
-  bottom: 15%; 
-  right: 15%; 
-  font-size: clamp(32px, 8vw, 70pt);
-  font-style: italic;
-  font-weight: bold;
-  font-family: "Oswald", sans-serif;
-  text-align: right; /* Align text to the right */
-}
-
-.two-column-grid {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  gap: clamp(16px, 4vw, 40px);
+  align-items: flex-end;
   justify-content: center;
-  align-items: flex-start;
-  z-index: 1;
-  width: min(95vw, 1200px);
-  max-height: calc(100vh - 140px); /* Reserve space for bottom navigation */
-  padding-bottom: 120px; /* Space above bottom navigation */
-  box-sizing: border-box;
+  gap: 1.5rem;
+  padding-right: 5vw;
 }
 
-
-.card {
-  background: var(--card-background);
-  border: 1px solid grey;
-  border-radius: 12px;
-  padding: clamp(16px, 3vw, 24px);
-  transition: all 0.3s ease;
-  text-align: center;
-  width: 100%;
-  max-width: 400px;
-  min-height: clamp(300px, calc(100vh - 200px), 500px);
-  max-height: calc(100vh - 200px);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  box-sizing: border-box;
-  overflow-y: auto;
+.names {
+  font-family: "Quicksand", sans-serif;
+  font-weight: 700;
+  font-size: 6rem;
+  color: #ffffff;
+  letter-spacing: 5px;
 }
 
-.card:hover {
-  background: var(--card-background);
-  transform: translateY(-2px);
-  border-color: white;
-}
-
-.item {
-  margin-bottom: 20px;
-  text-align: left;
-  line-height: 1.4;
-}
-
-.list-title {
-  font-weight: bold;
-  font-size: larger;
-}
-
-.projects-section {
-  display: flex;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-  text-align: center;
-}
-
-.contact-section {
-  display: flex;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-  text-align: center;
-}
-
-.contact-card {
-  background: var(--card-background);
-  border: 1px solid grey;
-  border-radius: 12px;
-  padding: clamp(16px, 3vw, 24px); /* Responsive padding */
-  backdrop-filter: blur(3px);
-  transition: all 0.3s ease;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-  min-height: clamp(100px, 35vh, 1000px);
-  min-width:  clamp(100px, 35vw, 1000px);
-}
-
-.gradient-line {
-    width: 4rem; 
-    height: 1px; 
-    background: linear-gradient(to right, white, transparent); 
-    opacity: 0.6; 
-}
-
-
-.gradient-line-back {
-    width: 4rem; 
-    height: 1px; 
-    background: linear-gradient(to left, white, transparent); 
-    opacity: 0.6; 
-    margin-left: auto; /* This will push the line to the right side */
-}
-
-@media (max-width: 768px) {
-  .two-column-grid {
-    flex-direction: column;
-    align-items: center;
-    top: 25px; /* Fixed positioning from top */
-    transform: translateX(-50%); /* Only center horizontally */
-    width: 95vw;
-    gap: 20px;
-    max-height: calc(100vh - 140px);
-    padding-bottom: 100px;
-  }
-  
-  .card {
-    width: 90vw;
-    max-width: none;
-    min-height: clamp(200px, 35vh, 350px);
-    max-height: calc(60vh - 40px);
-  }
-  
-  .bottom-navigation {
-    bottom: max(20px, env(safe-area-inset-bottom, 20px));
-    height: 50px;
-    position: fixed; /* Ensure it stays fixed on mobile too */
-  }
-  
-  .nav-button {
-    padding: 0;
-    font-size: 14px;
-  }
-}
-
-/* Mobile Portrait */
-@media (max-width: 768px) and (orientation: portrait) {
-  .two-column-grid {
-    flex-direction: column;
-    align-items: center;
-    top: 20px; /* Fixed positioning from top instead of centering */
-    transform: translateX(-50%); /* Only center horizontally */
-    gap: 15px;
-    max-height: calc(100vh - 120px);
-    padding-bottom: 90px;
-    width: 95vw;
-  }
-  
-  .card {
-    width: 88vw;
-    max-width: none;
-    min-height: clamp(180px, 32vh, 300px);
-    max-height: calc(38vh - 20px);
-    padding: 16px;
-  }
-  
-  .item {
-    margin-bottom: 12px;
-    font-size: 14px;
-  }
-  
-  .list-title {
-    font-size: 16px;
-    margin-bottom: 8px;
-  }
-}
-
-/* Mobile Landscape */
-@media (max-width: 768px) and (orientation: landscape) {
-  .two-column-grid {
-    flex-direction: row;
-    align-items: flex-start;
-    top: 8%;
-    gap: 12px;
-    max-height: calc(100vh - 100px);
-    padding-bottom: 70px;
-    width: 95vw;
-  }
-  
-  .card {
-    width: 45vw;
-    min-height: clamp(150px, 55vh, 250px);
-    max-height: calc(65vh - 20px);
-    padding: 12px;
-  }
-  
-  .item {
-    margin-bottom: 10px;
-    font-size: 13px;
-  }
-  
-  .list-title {
-    font-size: 15px;
-    margin-bottom: 6px;
-  }
-}
-
-/* Very small screens */
-@media (max-width: 480px) {
-  .two-column-grid {
-    top: 15px; /* Fixed positioning from top */
-    transform: translateX(-50%); /* Only center horizontally */
-    gap: 12px;
-    width: 96vw;
-    padding-bottom: 80px;
-  }
-  
-  .card {
-    width: 92vw;
-    padding: 12px;
-    min-height: clamp(160px, 28vh, 280px);
-    max-height: calc(35vh - 15px);
-  }
-  
-  .item {
-    margin-bottom: 8px;
-    font-size: 13px;
-    line-height: 1.3;
-  }
-  
-  .list-title {
-    font-size: 14px;
-    margin-bottom: 6px;
-  }
-  
-  .bottom-navigation {
-    height: 45px;
-    bottom: 15px;
-  }
-  
-  .nav-button {
-    padding: 0;
-    font-size: 12px;
-  }
-}
-
-/* Very tall mobile screens */
-@media (max-width: 768px) and (min-height: 800px) {
-  .card {
-    max-height: calc(40vh - 20px);
-    min-height: clamp(200px, 35vh, 350px);
-  }
-  
-  .two-column-grid {
-    gap: 18px;
-  }
-}
-
-/* Ultra small screens */
-@media (max-width: 360px) {
-  .two-column-grid {
-    width: 98vw;
-    gap: 8px;
-    top: 10px; 
-    transform: translateX(-50%); /* Only center horizontally */
-  }
-  
-  .card {
-    width: 94vw;
-    padding: 10px;
-    min-height: clamp(140px, 25vh, 250px);
-    max-height: calc(32vh - 10px);
-  }
-  
-  .item {
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-  
-  .list-title {
-    font-size: 13px;
-  }
+.text-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: "Quicksand", sans-serif;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 5px;
+  font-size: 1.5rem; 
+  text-align: right; 
 }

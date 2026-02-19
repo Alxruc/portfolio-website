@@ -5,29 +5,38 @@ import { useState } from 'react';
 
 function ContentBuilder() {
     const [activeButtonId, setActiveButtonId] = useState('home');
+    const [hoveringId, setHoveringId] = useState('none');
     
     const buttons = [
-        { id: 'home', label: 'Home' },
-        { id: 'about', label: 'About' },
-        { id: 'projects', label: 'Projects' },
-        { id: 'contact', label: 'Contact' }
+        { id: 'about', label: 'about' },
+        { id: 'projects', label: 'projects' },
+        { id: 'contact', label: 'contact' }
     ];
 
     const handleButtonClick = (buttonId) => {
         setActiveButtonId(buttonId)
     };
 
+    
+
     return (            
         <div>
             {/* Home Tab */}
             <div className={`name-display ${activeButtonId === 'home' ? 'visible' : 'hidden'}`}>
-                <div className="firstname">
-                    
+                <div className="names">
+                    Alex Ruchti
                 </div>
-                <div className="lastname">
-                  
-                </div>
-
+                {buttons.map((button) => (
+                    <button
+                        key={button.id}
+                        className="text-button"
+                        onClick={() => handleButtonClick(button.id)}
+                        onMouseEnter={() => setHoveringId(button.id)}
+                        onMouseLeave={() => setHoveringId('none')}
+                    >
+                         {hoveringId === button.id ? ">" : ""} {button.label}
+                    </button>
+                ))}
             </div>
 
             {/* About Tab */}
@@ -95,18 +104,6 @@ function ContentBuilder() {
 
             {/* Canvas */}
             <CanvasBuilder activeButtonId={activeButtonId}/>
-
-            <div className="bottom-navigation">
-                {buttons.map((button) => (
-                    <button
-                        key={button.id}
-                        className="nav-button"
-                        onClick={() => handleButtonClick(button.id)}
-                    >
-                        {button.label}
-                    </button>
-                ))}
-            </div>
         </div>
         
     )

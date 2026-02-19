@@ -11,7 +11,7 @@ const int normalIterations = 10;
 const int distIterations = 256;
 const int rayMarches = 50;
  
-const float shininess   = 200.0;
+const float shininess = 200.0;
 
 #define PI 3.14159265358979
 
@@ -103,6 +103,25 @@ vec2 getEnvUV(vec3 dir) {
     return uvOut;
 }
 
+mat3 rotateY(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat3(
+        vec3(c, 0, s),
+        vec3(0, 1, 0),
+        vec3(-s, 0, c)
+    );
+}
+
+mat3 rotateX(float theta) {
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat3(
+        vec3(1, 0, 0),
+        vec3(0, c, -s),
+        vec3(0, s, c)
+    );
+}
 
 void main() {
     vec2 uv = (vUv - 0.5) * 2.0;
@@ -121,14 +140,13 @@ void main() {
     float shiftAmount = (visibleWidth * zoom) * 0.25;
     uv.x += shiftAmount;
     
-    float time = u_time * 0.4;
-    float r = 2.; // Distance to fractal object
+    float time = u_time * 0.6;
+    float rotationTime = u_time * 0.06;
+    float r = 4.; // Distance to fractal object
     
-    vec3 ro = vec3(
-        r,          // Rotate on X
-        3.,
-        r          // Rotate on Z
-    );
+    vec3 initial_ro = vec3(r, 0.0, 0.0);
+
+    vec3 ro = rotateX(mod(rotationTime*0.5, 2.*PI)) * rotateY(mod(rotationTime, 2.*PI)) * initial_ro;
 
     vec3 lightPos = vec3(
         3.,
@@ -161,12 +179,7 @@ void main() {
             vec3 normal = calcNormal(p, c_julia);
             vec3 ref = reflect(rd, normal);
             vec3 reflectionColor = texture2D(u_envmap, getEnvUV(ref)).rgb;
-            vec3 metalTint = vec3(0.9, 0.95, 1.0); // Chrome tint
-            col = reflectionColor * metalTint;
-            float specular = calculate_spec(p, normal, lightPos);
-            // Add the bright white sun highlight on top
-            col += vec3(1.0) * specular * 1.0; 
-
+            col = reflectionColor; 
             // Makes edges slightly brighter/more reflective
             float fresnel = pow(1.0 + dot(rd, normal), 3.0);
             col = mix(col, vec3(1.0), fresnel * 0.5);
