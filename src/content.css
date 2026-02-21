@@ -92,6 +92,181 @@ canvas {
   background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.6), transparent);
 }
 
+.name-display {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1.5rem;
+  padding-right: 5vw;
+  position: absolute; 
+  top: 0;
+  left: 0;
+}
+
+.about-display {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10vw;
+  padding-right: 5vw;
+  position: absolute; 
+  top: 0;
+  left: 0;
+  flex-wrap: wrap;
+}
+
+.about-card {
+  flex-shrink: 0;
+  width: 400px;
+  height: 500px;
+  translate: -6px -6px;
+  background: #0d0c0c;
+  border: 3px solid #000000;
+  box-shadow: 6px 6px 0 #171212;
+  position: relative;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+}
+
+.about-head {
+  position: absolute;
+  top: -16px;   /* Half the height of the head to sit atop the border */
+  left: -15px;
+  font-size: 14px;
+  font-weight: 900;
+  width: 50%;
+  height: 32px;
+  background: #ffffff;
+  padding: 5px 12px;
+  color: #000000;
+  border: 3px solid #000000;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  z-index: 10;
+}
+
+.about-content {
+  padding: 24px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.about-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.list-item {
+  border-left: 3px solid #ffffff; /* Matches the white header theme */
+  padding-left: 15px;
+  transition: all 0.2s ease;
+}
+
+.list-item:hover {
+  border-left: 3px solid #888888; /* Subtle hover effect */
+  transform: translateX(5px);
+}
+
+.item-title {
+  display: block;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.item-desc {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: #bbbbbb;
+  line-height: 1.4;
+}
+
+.item-date {
+  font-size: 10px;
+  font-weight: 700;
+  color: #666666;
+  margin-top: 4px;
+  display: block;
+}
+
+.tech-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffffff;
+  margin-top: 4px;
+  display: block;
+}
+
+.tech-list {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  align-items: flex-start;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+
+.tech-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.tech-tag {
+  background: #000000;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.tech-tag.secondary {
+  background: #000000;
+  color: #ffffff;
+}
+
+.tech-tag.secondary:hover {
+  background: #ffffff;
+  color: #000000;
+}
+
+/* 3. Primary State */
+.tech-tag.primary {
+  background: #ffffff;
+  color: #000000;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.tech-tag.primary:hover {
+  background: #000000;
+  color: #ffffff;
+  border-color: #ffffff; 
+}
+
 .visible {
   opacity: 1;
   visibility: visible;
@@ -102,20 +277,11 @@ canvas {
 .hidden {
   opacity: 0;
   visibility: hidden;
-  display: none;
   transform: translateX(-100px); /* or 100px for right */
   transition: all 0.15s ease-out;
 }
 
-.name-display {
-  display: flex;
-  height: 100vh;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 1.5rem;
-  padding-right: 5vw;
-}
+
 
 .names {
   font-family: "Quicksand", sans-serif;

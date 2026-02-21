@@ -2,7 +2,9 @@ precision highp float;
 
 uniform vec2 u_resolution;
 uniform float u_time;
-uniform sampler2D u_envmap;
+uniform sampler2D u_bgTex;
+uniform sampler2D u_reflectTex;
+uniform bool u_showFractal;
 
 varying vec3 vPosition;
 varying vec2 vUv;
@@ -127,65 +129,69 @@ void main() {
     vec2 uv = (vUv - 0.5) * 2.0;
     float aspect = u_resolution.x / u_resolution.y;
     uv.x *= aspect;
-    float fractalSize = 3.5; 
-    float visibleWidth = 2.0 * aspect;
+    
+    vec2 bg_uv = uv; // Save untouched UVs for the background
 
-    // If the screen is narrower than the fractal, calculate a zoom factor
-    // to shrink the world until it fits
-    float zoom = max(1.0, fractalSize / visibleWidth);
+    // If aspect is < 0.8 (Portrait/Mobile), isLandscape is 0.0.
+    // If aspect is > 1.2 (Landscape/Desktop), isLandscape is 1.0.
+    float isLandscape = smoothstep(0.8, 1.2, aspect); 
+
+    // Position: 
+    // mix() blends between centered (0.0) and left-aligned (aspect * 0.5).
+    float xOffset = mix(0.0, aspect * 0.5, isLandscape);
+    uv.x += xOffset;
     
-    // Apply the zoom
-    uv *= zoom;
-    // We shift the coordinate system to the right, which moves the object left
-    float shiftAmount = (visibleWidth * zoom) * 0.25;
-    uv.x += shiftAmount;
+    // smaller fractal on mobile
+    float fractalSize = mix(0.65, 1.3, isLandscape);
+    uv /= fractalSize;
+
     
-    float time = u_time * 0.6;
+    // camera
+    float time = u_time * 0.4;
     float rotationTime = u_time * 0.06;
-    float r = 4.; // Distance to fractal object
+    float r = 4.5; 
     
-    vec3 initial_ro = vec3(r, 0.0, 0.0);
-
-    vec3 ro = rotateX(mod(rotationTime*0.5, 2.*PI)) * rotateY(mod(rotationTime, 2.*PI)) * initial_ro;
-
-    vec3 lightPos = vec3(
-        3.,
-        0.,
-        5.
-    );
-    // This ensures the camera always points at the center (0,0,0)
-    vec3 ta = vec3(0.0, 0.0, 0.0); // Target
+    vec3 initial_ro = vec3(r, 0., 0.);
+    vec3 ro = rotateX(mod(rotationTime * 0.5, 2.0 * PI)) * rotateY(mod(rotationTime, 2.0 * PI)) * initial_ro;
+    vec3 ta = vec3(0.0, 0.0, 0.0); 
     
-    vec3 fwd = normalize(ta - ro);             // Forward vector
-    vec3 right = normalize(cross(fwd, vec3(0.0, 1.0, 0.0))); // Right vector
-    vec3 up = cross(right, fwd);               // Up vector
+    vec3 fwd = normalize(ta - ro);             
+    vec3 right = normalize(cross(fwd, vec3(0.001, 1.0, 0.001))); 
+    vec3 up = cross(right, fwd);               
 
-    // ray direction
+
     vec3 rd = normalize(uv.x * right + uv.y * up + 2.0 * fwd);
+    vec3 rd_bg = normalize(bg_uv.x * right + bg_uv.y * up + 2.0 * fwd);
+
+    vec2 uvOut = getEnvUV(rd_bg);
+    vec3 col = texture(u_bgTex, uvOut).rgb;
+
+    if(!u_showFractal) {
+        gl_FragColor = vec4(col, 1.0);
+        return;
+    }
 
     float t = 0.0;
     vec3 p;
-    vec4 c_julia = 0.25*cos(time*vec4(0.2,1.7,1.1,2.5) ) - vec4(0.0,-0.7,0.0,0.0);
-
-    // mapping env map uvs
-    vec2 uvOut = getEnvUV(rd);
-
-    vec3 col = texture(u_envmap, uvOut).rgb;
+    vec4 initial = vec4(sin(time), 0.0, 0.0, 0.0) + (cos(time) + vec4(0.0, 1.0, 1.0, 1.0));
+    vec4 c_julia = normalize(initial);
 
     for (int i = 0; i < rayMarches; i++) {
         p = ro + rd * t;
         float d = map(p, c_julia);
-        if (d < 0.001) {
+        
+        if (d < 0.01) {
             vec3 normal = calcNormal(p, c_julia);
             vec3 ref = reflect(rd, normal);
-            vec3 reflectionColor = texture2D(u_envmap, getEnvUV(ref)).rgb;
+            vec3 reflectionColor = texture(u_reflectTex, getEnvUV(ref)).rgb;
             col = reflectionColor; 
-            // Makes edges slightly brighter/more reflective
+            
             float fresnel = pow(1.0 + dot(rd, normal), 3.0);
             col = mix(col, vec3(1.0), fresnel * 0.5);
             break;
         }
-        t += d;
+        
+        t += d * 0.75; 
         if (t > 100.0) break;
     }
 

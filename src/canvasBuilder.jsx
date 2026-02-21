@@ -3,10 +3,24 @@ import * as THREE from 'three';
 
 import vertexShader from './shaders/julia.v.glsl?raw'; 
 import fragmentShader from './shaders/julia.f.glsl?raw'; 
-import envMapTex from './textures/multi_nebulae.jpg';
+import bgTexPath from './textures/multi_nebulae.jpg';
+import reflectTexPath from './textures/nebula.jpg'; 
 
-function CanvasBuilder() {
+function CanvasBuilder( {activeButtonId} ) {
     const canvasRef = useRef(null);
+
+    const canvasWrapperStyle = {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: -1,
+        transition: 'transform 1.0s cubic-bezier(0.77, 0, 0.175, 1)', // Smooth ease-in-out
+        // If we are on home, stay at 0. If not, slide the entire canvas UP by 100% of the screen height
+        transform: activeButtonId === 'home' ? 'translateY(0%)' : 'translateY(-100%)',
+        pointerEvents: activeButtonId === 'home' ? 'auto' : 'none'
+    };
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -18,22 +32,22 @@ function CanvasBuilder() {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
         const scene = new THREE.Scene();
-
-        // Use an Orthographic Camera for a full-screen shader
-        // This ensures coordinates map 1:1 with the screen
         const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
-        // fill the screen (2x2)
         const geometry = new THREE.PlaneGeometry(2, 2);
 
         const loader = new THREE.TextureLoader();
-        const envMap = loader.load(envMapTex);
-        envMap.mapping = THREE.EquirectangularReflectionMapping;
+        
+        // "normal" space
+        const bgTex = loader.load(bgTexPath);
+        bgTex.generateMipmaps = false;
+        bgTex.minFilter = THREE.LinearFilter;
+        bgTex.magFilter = THREE.LinearFilter;
 
-        // disable unnecessary things for performance
-        envMap.generateMipmaps = false;
-        envMap.minFilter = THREE.LinearFilter;
-        envMap.magFilter = THREE.LinearFilter;
+        // pink nebula to reflect inside the fractal
+        const reflectTex = loader.load(reflectTexPath);
+        reflectTex.generateMipmaps = false;
+        reflectTex.minFilter = THREE.LinearFilter;
+        reflectTex.magFilter = THREE.LinearFilter;
 
         const material = new THREE.ShaderMaterial({
             vertexShader,
@@ -41,11 +55,12 @@ function CanvasBuilder() {
             uniforms: {
                 u_time: { value: 0 },
                 u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-                u_envmap: { value: envMap }
+                u_bgTex: { value: bgTex },
+                u_reflectTex: { value: reflectTex },
+                u_showFractal: { value: true }
             }
         });
 
-        
         const mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);
 
@@ -54,10 +69,7 @@ function CanvasBuilder() {
 
         const animate = () => {
             animationFrameId = requestAnimationFrame(animate);
-            
-            // Update uniforms
             material.uniforms.u_time.value = clock.getElapsedTime();
-            
             renderer.render(scene, camera);
         };
         animate();
@@ -65,10 +77,7 @@ function CanvasBuilder() {
         const onWindowResize = () => {
             const width = window.innerWidth;
             const height = window.innerHeight;
-
             renderer.setSize(width, height);
-            
-            // Update shader resolution uniform
             material.uniforms.u_resolution.value.set(width, height);
         };
         window.addEventListener('resize', onWindowResize);
@@ -83,10 +92,12 @@ function CanvasBuilder() {
     }, []);
 
     return (
+        <div style={canvasWrapperStyle}>
         <canvas 
             ref={canvasRef} 
             style={{ display: 'block', width: '100vw', height: '100vh' }}
         />
+        </div>
     )
 }
 
