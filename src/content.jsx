@@ -10,38 +10,36 @@ function ContentBuilder() {
     const [visibleContentId, setVisibleContentId] = useState('home');
     const [hoveringId, setHoveringId] = useState('none');
 
-    // A ref to keep track of the timeout so we don't get overlapping animations if the user clicks fast
-    const timeoutRef = useRef(null);
-    
     const buttons = [
         { id: 'about', label: 'about' },
         { id: 'projects', label: 'projects' },
         { id: 'contact', label: 'contact' }
     ];
 
+    const tabOrder = ['home', 'about', 'projects', 'contact'];
+
     const handleButtonClick = (buttonId) => {
         if (buttonId === activeButtonId) return;
         
         setActiveButtonId(buttonId);
+        setVisibleContentId(buttonId); 
+    };
 
-        // Clear any existing timeouts to prevent glitches from rapid clicking
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    const getContainerClass = (tabId) => {
+        if (tabId === activeButtonId) return 'visible'; // It is the active tab
 
-        if (activeButtonId === 'home' || buttonId === 'home') {
-            setVisibleContentId('none'); 
-            
-            timeoutRef.current = setTimeout(() => {
-                setVisibleContentId(buttonId);
-            }, 800); 
-        } else {
-            setVisibleContentId(buttonId);
-        }
+        const activeIndex = tabOrder.indexOf(activeButtonId);
+        const thisIndex = tabOrder.indexOf(tabId);
+
+        // If this tab's position in the array is before the active one, it goes to the top.
+        // If it's after, it goes to the bottom.
+        return thisIndex < activeIndex ? 'hidden-top' : 'hidden-bottom';
     };
 
     return (            
         <div>
             {/* Home Tab */}
-            <div className={`name-display ${activeButtonId === 'home' ? 'visible' : 'hidden'}`}>
+            <div className={`name-display ${getContainerClass('home')}`}>
                 <div className="names">
                    alex ruchti
                 </div>
@@ -58,7 +56,7 @@ function ContentBuilder() {
                 ))}
             </div>
 
-            <div className={`about-display ${visibleContentId === 'about' ? 'visible' : 'hidden'}`}>
+            <div className={`about-display ${getContainerClass('about')}`}>
                 <div className="about-card">
                     <div className="about-head">
                         Education & Work

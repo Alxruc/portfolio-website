@@ -267,18 +267,27 @@ canvas {
   border-color: #ffffff; 
 }
 
+/* Where elements sit before they enter */
+.hidden-top {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-100px);
+  transition: all 0.15s ease-out;
+}
+
+/* Where elements go when they leave  */
+.hidden-bottom {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(100px);
+  transition: all 0.15s ease-out;
+}
+
 .visible {
   opacity: 1;
   visibility: visible;
-  transform: translateX(0);
+  transform: translateY(0);
   transition: all 0.8s ease-out;
-}
-
-.hidden {
-  opacity: 0;
-  visibility: hidden;
-  transform: translateX(-100px); /* or 100px for right */
-  transition: all 0.15s ease-out;
 }
 
 
