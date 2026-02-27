@@ -41,19 +41,25 @@ function ContentBuilder() {
             {/* Home Tab */}
             <div className={`name-display ${getContainerClass('home')}`}>
                 <div className="names">
-                   alex ruchti
+                alex ruchti
                 </div>
-                {buttons.map((button) => (
-                    <button
-                        key={button.id}
-                        className="text-button"
-                        onClick={() => handleButtonClick(button.id)}
-                        onMouseEnter={() => setHoveringId(button.id)}
-                        onMouseLeave={() => setHoveringId('none')}
-                    >
-                        {hoveringId === button.id ? ">" : ""} {button.label}
-                    </button>
-                ))}
+                
+                <div className="nav-menu">
+                    {buttons.map((button) => (
+                        <button
+                            key={button.id}
+                            className="text-button"
+                            onClick={() => handleButtonClick(button.id)}
+                            onMouseEnter={() => setHoveringId(button.id)}
+                            onMouseLeave={() => setHoveringId('none')}
+                        >
+                            <span className="hover-indicator">
+                                {hoveringId === button.id ? "> " : ""}
+                            </span>
+                            {button.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className={`about-display ${getContainerClass('about')}`}>
