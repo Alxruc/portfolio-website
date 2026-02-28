@@ -207,7 +207,9 @@ function ContentBuilder() {
                     </div>
                 </div>
             </div>
-            
+
+            {/* Projects */}
+            <ProjectsBuilder visibilityClass={getContainerClass('projects')}></ProjectsBuilder>
             {/* Canvas */}
             <CanvasBuilder activeButtonId={activeButtonId}/>
         </div>
