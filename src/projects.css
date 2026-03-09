@@ -1,16 +1,23 @@
-
+.projects-section-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;         
+    padding: 2rem 5vw;     /* Changed from 2rem 0 to match others */
+    overflow-y: auto;      
+    overflow-x: hidden;    
+    box-sizing: border-box;
+}
 
 .projects-display {
-  display: flex;
-  gap: 40px;
-  justify-content: center;
-  align-items: stretch;
-  flex-wrap: wrap;
-  padding: 0 5vw;
-  max-height: 100vh;
-  overflow-y: auto; 
-  scrollbar-width: none; 
-  -ms-overflow-style: none;
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    align-items: stretch;
+    flex-wrap: wrap;
+    padding: 0;            /* Removed the 0 5vw padding from here */
+    /* keep your max-height and overflow rules... */
 }
 
 .projects-display::after {
@@ -158,4 +165,65 @@
 .brutalist-btn.primary:hover {
   background: #ffffff;
   color: #000000;
+}
+
+.brutalist-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* Space between the title line and the subtitle */
+  margin-bottom: 3rem; /* Pushes the grid down */
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.section-title {
+  background-color: #ffffff;
+  color: #000000;
+  padding: 0.5rem 1rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.section-subtitle {
+  color: #a0a0a0; /* Muted gray so it doesn't fight the stark white title */
+  font-family: monospace; /* Gives it a technical/code aesthetic */
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 800px; /* Prevents long lines of text from stretching too far */
+  margin: 0;
+  text-transform: uppercase; /* Optional: Keeps the brutalist consistency */
+}
+
+.project-category-group {
+  margin-bottom: 4rem; /* Creates a large, distinct gap between categories */
+}
+
+.category-header {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px dashed #555555; /* A gritty, terminal-like divider line */
+  padding-bottom: 0.5rem;
+}
+
+.category-title {
+  color: #ffffff;
+  font-family: monospace;
+  font-size: 1.25rem;
+  font-weight: normal; /* Keeps it from competing with the main section title */
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .projects-section-wrapper {
+    padding: 2rem 1.5rem; 
+  }
 }

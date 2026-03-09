@@ -1,0 +1,51 @@
+/* --- CONTACT WRAPPER --- */
+.contact-section-wrapper {
+    position: absolute; 
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    padding: 2rem 5vw; /* Inherits the standard desktop layout */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- CENTER CONTENT --- */
+.contact-center-content {
+    flex-grow: 1; /* Fills all remaining space under the nav */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+/* --- EMAIL STYLING (Brutalist Hover Effect) --- */
+.contact-email {
+    font-size: 4vw; /* Scales dynamically with the screen */
+    font-weight: 900;
+    color: #ffffff;
+    text-decoration: none;
+    border-bottom: 4px solid #ffffff; /* Heavy underline instead of default */
+    padding-bottom: 4px;
+    transition: all 0.2s ease;
+}
+
+.contact-email:hover {
+    background-color: #ffffff;
+    color: #000000; /* Inverts on hover */
+}
+
+/* --- MOBILE ADJUSTMENTS --- */
+@media (max-width: 768px) {
+    .contact-section-wrapper {
+        padding: 2rem 1.5rem; /* Matches your standardized mobile grid */
+    }
+    
+    .contact-email {
+        font-size: 1.8rem; /* Hardcoded size so it doesn't get too small */
+        border-bottom: 2px solid #ffffff;
+        word-break: break-all; /* Forces long emails to wrap instead of breaking the screen width */
+        text-align: center;
+    }
+}

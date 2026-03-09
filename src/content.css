@@ -95,20 +95,17 @@ canvas {
 
 .name-display {
     position: absolute;
-    right: 8%;
-    top: 50%;
+    top: 45%;
+    right: 5vw;
     transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2rem;
-    z-index: 10;
 }
 
 .names {
-    font-size: 10vh;
-    letter-spacing: 0.1rem;
-    color: white;
+    font-size: 8vw;
+    font-weight: 200;
+    line-height: 0.9;
+    letter-spacing: -2px; 
+    -webkit-text-stroke: 2px #ffffff;
 }
 
 
@@ -143,167 +140,6 @@ canvas {
     margin-right: 0.5rem;
 }
 
-.about-display {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 10vw;
-  padding-right: 5vw;
-  position: absolute; 
-  top: 0;
-  left: 0;
-  flex-wrap: wrap;
-}
-
-.about-card {
-  flex-shrink: 0;
-  width: 400px;
-  height: 500px;
-  translate: -6px -6px;
-  background: #0d0c0c;
-  border: 3px solid #000000;
-  box-shadow: 6px 6px 0 #171212;
-  position: relative;
-  transition: all 0.3s ease;
-  margin-top: 20px;
-}
-
-.about-head {
-  position: absolute;
-  top: -16px;   /* Half the height of the head to sit atop the border */
-  left: -15px;
-  font-size: 14px;
-  font-weight: 900;
-  width: 50%;
-  height: 32px;
-  background: #ffffff;
-  padding: 5px 12px;
-  color: #000000;
-  border: 3px solid #000000;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  z-index: 10;
-}
-
-.about-content {
-  padding: 24px 16px;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.about-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-
-.list-item {
-  border-left: 3px solid #ffffff; /* Matches the white header theme */
-  padding-left: 15px;
-  transition: all 0.2s ease;
-}
-
-.list-item:hover {
-  border-left: 3px solid #888888; /* Subtle hover effect */
-  transform: translateX(5px);
-}
-
-.item-title {
-  display: block;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #ffffff;
-  margin-bottom: 4px;
-}
-
-.item-desc {
-  display: block;
-  font-size: 13px;
-  font-weight: 400;
-  color: #bbbbbb;
-  line-height: 1.4;
-}
-
-.item-date {
-  font-size: 10px;
-  font-weight: 700;
-  color: #666666;
-  margin-top: 4px;
-  display: block;
-}
-
-.tech-title {
-  font-size: 16px;
-  font-weight: bold;
-  color: #ffffff;
-  margin-top: 4px;
-  display: block;
-}
-
-.tech-list {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 12px;
-  align-items: flex-start;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-
-.tech-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px 0;
-}
-
-.tech-tag {
-  background: #000000;
-  color: #ffffff;
-  border: 2px solid #ffffff;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.2s ease;
-  cursor: default;
-}
-
-.tech-tag.secondary {
-  background: #000000;
-  color: #ffffff;
-}
-
-.tech-tag.secondary:hover {
-  background: #ffffff;
-  color: #000000;
-}
-
-/* 3. Primary State */
-.tech-tag.primary {
-  background: #ffffff;
-  color: #000000;
-  width: 100%;
-  text-align: center;
-  box-sizing: border-box;
-}
-
-.tech-tag.primary:hover {
-  background: #000000;
-  color: #ffffff;
-  border-color: #ffffff; 
-}
-
 /* Where elements sit before they enter */
 .hidden-top {
   opacity: 0;
@@ -327,64 +163,71 @@ canvas {
   transition: all 0.8s ease-out;
 }
 
+.scrollable-nav {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 2rem;
+    padding: 0;
+    margin-bottom: 3rem;
+    box-sizing: border-box;
+}
+
+.home-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    padding: 2rem 5vw; /* Standardized to match About/Projects */
+    box-sizing: border-box;
+    pointer-events: none; 
+}
+
+.home-wrapper.visible {
+    pointer-events: auto; /* Re-enables clicking when Home is active */
+}
+
+.text-button.active {
+    font-weight: 900;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
 @media (max-width: 768px) {
-    .names {
-        position: fixed;
-        top: 25px;
-        left: 25px;
-        font-size: 2rem; 
-        line-height: 1.1; 
-        z-index: 20;
+    .scrollable-nav {
+        justify-content: center;
+        padding: 0;
+        gap: 1rem; 
+        flex-wrap: wrap;
     }
 
+    .scrollable-nav .text-button {
+        padding: 0.5rem;     /* Reduces any internal padding taking up space */
+    }
+
+    .home-wrapper {
+        padding: 2rem 1.5rem; 
+    }
+
+    /* Anchored bottom right */
     .name-display {
         position: fixed;
-        top: auto; 
-        right: 25px;
-        transform: none; 
-        
-        bottom: max(30px, env(safe-area-inset-bottom, 30px)); 
+        top: auto;
+        bottom: 2rem;
+        right: 1.5rem;
+        left: auto;
+        transform: none;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        text-align: right;
+        width: auto;
+        z-index: 50;
     }
 
-    .about-display {
-        flex-direction: column; 
-        flex-wrap: nowrap; 
-        justify-content: flex-start;
-        align-items: center;
-        width: 100vw;
-        height: 100dvh;
-        padding: 90px 40px 120px 40px; 
-        gap: 80px; 
-        
-        box-sizing: border-box;
-        overflow-y: auto; 
-        pointer-events: auto; 
-    }
-
-
-    .about-card {
-        width: 100%;
-        max-width: 100%;
-        height: auto;
-        min-height: auto;
-        translate: 0;
-        margin: 0;
-        box-sizing: border-box;
-    }
-
-    .about-head {
-        width: auto; 
-        min-width: 50%;
-        padding: 5px 15px;
-    }
-
-    .tech-list {
-        flex-direction: column; 
-        gap: 8px;
-        margin-bottom: 20px;
-    }
-    
-    .tech-list > div:first-child {
-        width: 100%; 
+    /* Scale down the main name slightly for mobile screens */
+    .names {
+        font-size: 2.5rem; 
     }
 }
