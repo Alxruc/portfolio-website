@@ -1,14 +1,29 @@
 import { useEffect, useRef } from 'react';
-import * as THREE from 'three';
+import { 
+    WebGLRenderer, 
+    Scene, 
+    OrthographicCamera, 
+    Group, 
+    PlaneGeometry, 
+    TextureLoader, 
+    ShaderMaterial, 
+    Mesh, 
+    AmbientLight, 
+    DirectionalLight, 
+    Clock, 
+    Vector2, 
+    RepeatWrapping, 
+    LinearFilter 
+} from 'three';
 
 import vertexShader from './shaders/julia.v.glsl?raw'; 
 import fragmentShader from './shaders/julia.f.glsl?raw'; 
 import waterVertex from './shaders/water.v.glsl?raw';
 import waterFragment from './shaders/water.f.glsl?raw';
-import bgTexPath from './textures/multi_nebulae.jpg';
-import reflectTexPath from './textures/nebula.jpg'; 
-import waterColorPath from './textures/water_color.jpg';
-import waterNormalPath from './textures/water_normal.jpg';
+import bgTexPath from './textures/multi_nebulae.webp';
+import reflectTexPath from './textures/nebula.webp'; 
+import waterColorPath from './textures/water_color.webp';
+import waterNormalPath from './textures/water_normal.webp';
 
 function CanvasBuilder({ activeButtonId }) {
     const canvasRef = useRef(null);
@@ -26,67 +41,67 @@ function CanvasBuilder({ activeButtonId }) {
 
     useEffect(() => {
         const canvas = canvasRef.current;
-        const renderer = new THREE.WebGLRenderer({
+        const renderer = new WebGLRenderer({
             canvas: canvas,
             antialias: false
         });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        const scene = new THREE.Scene();
-        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -10, 10);
+        const scene = new Scene();
+        const camera = new OrthographicCamera(-1, 1, 1, -1, -10, 10);
         
-        const slideGroup = new THREE.Group();
+        const slideGroup = new Group();
         scene.add(slideGroup);
 
         // fractals
-        const geometry = new THREE.PlaneGeometry(2, 2);
-        const loader = new THREE.TextureLoader();
+        const geometry = new PlaneGeometry(2, 2);
+        const loader = new TextureLoader();
         
         // "normal" space
         const bgTex = loader.load(bgTexPath);
         bgTex.generateMipmaps = false;
-        bgTex.minFilter = THREE.LinearFilter;
-        bgTex.magFilter = THREE.LinearFilter;
+        bgTex.minFilter = LinearFilter;
+        bgTex.magFilter = LinearFilter;
 
         // pink nebula reflected in the fractal
         const reflectTex = loader.load(reflectTexPath);
         reflectTex.generateMipmaps = false;
-        reflectTex.minFilter = THREE.LinearFilter;
-        reflectTex.magFilter = THREE.LinearFilter;
+        reflectTex.minFilter = LinearFilter;
+        reflectTex.magFilter = LinearFilter;
 
-        const material = new THREE.ShaderMaterial({
+        const material = new ShaderMaterial({
             vertexShader,
             fragmentShader,
             uniforms: {
                 u_time: { value: 0 },
-                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                u_resolution: { value: new Vector2(window.innerWidth, window.innerHeight) },
                 u_bgTex: { value: bgTex },
                 u_reflectTex: { value: reflectTex },
                 u_showFractal: { value: true }
             }
         });
 
-        const fractalMesh = new THREE.Mesh(geometry, material);
+        const fractalMesh = new Mesh(geometry, material);
         slideGroup.add(fractalMesh); 
         
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        const directionalLight = new DirectionalLight(0xffffff, 1.5);
         directionalLight.position.set(0, 2, 7);
         scene.add(directionalLight);
 
         const colorTex = loader.load(waterColorPath);
-        colorTex.wrapS = colorTex.wrapT = THREE.RepeatWrapping;
+        colorTex.wrapS = colorTex.wrapT = RepeatWrapping;
 
         const normalTex = loader.load(waterNormalPath);
-        normalTex.wrapS = normalTex.wrapT = THREE.RepeatWrapping;
+        normalTex.wrapS = normalTex.wrapT = RepeatWrapping;
 
-        const waterGeometry = new THREE.PlaneGeometry(2, 2); 
+        const waterGeometry = new PlaneGeometry(2, 2); 
 
-        const waterMaterial = new THREE.ShaderMaterial({
+        const waterMaterial = new ShaderMaterial({
             vertexShader: waterVertex,
             fragmentShader: waterFragment,
             transparent: true,
@@ -97,11 +112,11 @@ function CanvasBuilder({ activeButtonId }) {
             }
         });
 
-        const water = new THREE.Mesh(waterGeometry, waterMaterial);
+        const water = new Mesh(waterGeometry, waterMaterial);
         water.position.y = -2;
         slideGroup.add(water);
         let animationFrameId;
-        const clock = new THREE.Clock();
+        const clock = new Clock();
 
         let startY = slideGroup.position.y;
         let previousTargetY = targetGroupY.current;

@@ -17,7 +17,7 @@ function ProjectsBuilder({ visibilityClass, navElement}) {
             description: `Use Whisper models to locally transcribe YouTube videos, to get more accurate subtitles, than YouTube offers themselves.
             Comes with a native program which handles the logic and database and a partner browser extension to make the process simpler`,
             tech: ["Rust", "Svelte", "Tauri"],
-            img: "/mirror/better_subtitles.jpg",
+            img: "/mirror/better_subtitles.webp",
             links: [
                 {
                     type: "Source",
@@ -30,7 +30,7 @@ function ProjectsBuilder({ visibilityClass, navElement}) {
             title: "3-PARTITION Tetris",
             description: `Interactive visualization of a proof showing that even a simplified version of Tetris is NP-Hard`,
             tech: ["C++"],
-            img: "/mirror/tetris.jpg",
+            img: "/mirror/tetris.webp",
             links: [
                 {
                     type: "Source",
@@ -44,7 +44,7 @@ function ProjectsBuilder({ visibilityClass, navElement}) {
             description: `Party game web application where players compete who can guess a given song the fastest. The host can input their own choice of songs / playlist directly
             via the Spotify API and players use their phone as buzzers which are connected over Web Sockets.`,
             tech: ["JavaScript", "React"],
-            img: "/mirror/gts_score.jpg",
+            img: "/mirror/gts_score.webp",
             links: [
                 {
                     type: "Source",
@@ -58,7 +58,7 @@ function ProjectsBuilder({ visibilityClass, navElement}) {
             description: `My bachelor thesis: A novel interpolation technique which combines the idea of B-splines (smooth curves) with the Natural Neighbor interpolation technique to create
             smoother surface then Natural Neighbor would create by itself.`,
             tech: ["C++", "CGAL"],
-            img: "/mirror/nn_splines.jpg",
+            img: "/mirror/nn_splines.webp",
             links: [],
             category: categories[2]
         },
@@ -67,7 +67,7 @@ function ProjectsBuilder({ visibilityClass, navElement}) {
             description: `This website uses custom GPU shaders to render the both the background for this projects page and the Julia fractal on the main screen.
             It uses raymarching to draw a 3D slice of the 4D object onto the screen`,
             tech: ["JavaScript", "Three.js", "React"],
-            img: "/mirror/julia.jpg",
+            img: "/mirror/julia.webp",
             links: [
                 {
                     type: "Source",
@@ -80,7 +80,7 @@ function ProjectsBuilder({ visibilityClass, navElement}) {
             title: "Japanese Word of the Day",
             description: "A browser extension which gives you a random Japanese word every day for language learning.",
             tech: ["JavaScript"],
-            img: "/mirror/wotd.jpg",
+            img: "/mirror/wotd.webp",
             links: [
                 {
                     type: "Source",
